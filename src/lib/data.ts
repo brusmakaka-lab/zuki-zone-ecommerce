@@ -13,7 +13,7 @@ import { getPrisma, hasDatabase } from "@/lib/prisma";
 
 const productInclude = {
   category: true,
-  images: { orderBy: { sortOrder: "asc" as const } },
+  images: { orderBy: [{ isMain: "desc" as const }, { sortOrder: "asc" as const }] },
 };
 
 function numberFromDecimal(value: Prisma.Decimal | number | string | null | undefined) {

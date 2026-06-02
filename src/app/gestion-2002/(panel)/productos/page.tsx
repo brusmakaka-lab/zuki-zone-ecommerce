@@ -1,4 +1,5 @@
 import { deleteProduct, upsertProduct } from "@/app/gestion-2002/actions";
+import { AdminImageUpload } from "@/components/admin-image-upload";
 import { getPrisma, hasDatabase } from "@/lib/prisma";
 import { formatMoney } from "@/lib/utils";
 
@@ -6,7 +7,7 @@ export default async function AdminProductsPage() {
   if (!hasDatabase()) return <AdminNotice title="Productos" />;
   const prisma = getPrisma();
   const [products, categories] = await Promise.all([
-    prisma.product.findMany({ include: { category: true, images: true }, orderBy: { createdAt: "desc" } }),
+    prisma.product.findMany({ include: { category: true, images: { orderBy: [{ isMain: "desc" }, { sortOrder: "asc" }] } }, orderBy: { createdAt: "desc" } }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);
 
@@ -31,7 +32,11 @@ export default async function AdminProductsPage() {
             ))}
           </select>
         </div>
-        <input name="imageUrl" placeholder="/product-mi-producto.svg o URL de Blob" required className="h-11 rounded-md border border-stone-200 px-3" />
+        <AdminImageUpload label="Imagen principal" name="mainImageUrl" scope="products" required hint="La card del catalogo usa esta imagen. Tambien se guarda en la galeria." />
+        <label className="grid gap-2 text-sm font-bold text-stone-800">
+          Galeria de imagenes
+          <textarea name="imageUrls" rows={4} placeholder="Una URL por linea" className="rounded-md border border-stone-200 px-3 py-2 font-normal" />
+        </label>
         <div className="flex flex-wrap gap-4 text-sm font-semibold">
           <label><input type="checkbox" name="featured" /> Destacado</label>
           <label><input type="checkbox" name="onSale" /> Oferta</label>
@@ -71,6 +76,37 @@ export default async function AdminProductsPage() {
           </tbody>
         </table>
       </div>
+      <section className="mt-6 grid gap-4">
+        <h2 className="text-xl font-black text-stone-950">Editar imagenes existentes</h2>
+        {products.map((product) => (
+          <form key={product.id} action={upsertProduct} className="grid gap-3 rounded-lg border border-stone-200 bg-white p-4">
+            <input type="hidden" name="id" value={product.id} />
+            <input type="hidden" name="name" value={product.name} />
+            <input type="hidden" name="slug" value={product.slug} />
+            <input type="hidden" name="description" value={product.description} />
+            <input type="hidden" name="price" value={Number(product.price)} />
+            <input type="hidden" name="previousPrice" value={product.previousPrice ? Number(product.previousPrice) : ""} />
+            <input type="hidden" name="stock" value={product.stock} />
+            <input type="hidden" name="categoryId" value={product.categoryId} />
+            {product.featured ? <input type="hidden" name="featured" value="on" /> : null}
+            {product.onSale ? <input type="hidden" name="onSale" value="on" /> : null}
+            {product.published ? <input type="hidden" name="published" value="on" /> : null}
+            {product.active ? <input type="hidden" name="active" value="on" /> : null}
+            <p className="font-black">{product.name}</p>
+            <AdminImageUpload label="Nueva imagen principal" name="mainImageUrl" scope="products" value={product.images[0]?.url} />
+            <label className="grid gap-2 text-sm font-bold text-stone-800">
+              Galeria persistida
+              <textarea
+                name="imageUrls"
+                rows={Math.max(3, product.images.length + 1)}
+                defaultValue={product.images.map((image) => image.url).join("\n")}
+                className="rounded-md border border-stone-200 px-3 py-2 font-normal"
+              />
+            </label>
+            <button className="h-10 rounded-md bg-violet-700 px-4 font-bold text-white md:w-fit">Guardar imagenes</button>
+          </form>
+        ))}
+      </section>
     </div>
   );
 }

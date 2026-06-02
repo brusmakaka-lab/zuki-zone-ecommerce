@@ -140,8 +140,11 @@ model ProductImage {
   productId String
   url       String
   alt       String?
+  isMain    Boolean  @default(false)
   sortOrder Int      @default(0)
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, isMain])
 }
 
 model Cart {
@@ -224,7 +227,9 @@ model SiteSettings {
   facebookUrl     String?
   tiktokUrl        String?
   logoUrl          String?
+  logoHeight       Int      @default(48)
   faviconUrl       String?
+  ogImageUrl       String?
   primaryColor     String   @default("#7c3aed")
   accentColor      String   @default("#f97316")
   radius           Int      @default(10)

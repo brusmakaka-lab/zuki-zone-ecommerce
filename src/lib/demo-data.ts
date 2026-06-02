@@ -38,7 +38,9 @@ export type StoreSettings = {
   facebookUrl: string | null;
   tiktokUrl?: string | null;
   logoUrl?: string | null;
+  logoHeight?: number;
   faviconUrl?: string | null;
+  ogImageUrl?: string | null;
   primaryColor?: string;
   accentColor?: string;
   radius?: number;
@@ -83,7 +85,9 @@ export const demoSettings: StoreSettings = {
   facebookUrl: "https://facebook.com",
   tiktokUrl: null,
   logoUrl: null,
+  logoHeight: 48,
   faviconUrl: null,
+  ogImageUrl: "/zuki-hero-1.svg",
   primaryColor: "#7c3aed",
   accentColor: "#f97316",
   radius: 10,

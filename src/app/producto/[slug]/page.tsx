@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { ProductCard } from "@/components/product-card";
+import { ProductGallery } from "@/components/product-gallery";
 import { getProductBySlug, getProducts, getSettings } from "@/lib/data";
 import { formatMoney, whatsappUrl } from "@/lib/utils";
 
@@ -25,9 +25,7 @@ export default async function ProductDetailPage({ params }: { params: Params }) 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid gap-10 lg:grid-cols-2">
-        <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-stone-200 bg-stone-100">
-          <Image src={product.images[0]?.url ?? "/product-fallback.svg"} alt={product.name} fill priority className="object-cover" />
-        </div>
+        <ProductGallery images={product.images} productName={product.name} />
         <div className="self-center">
           <Link href={`/catalogo?categoria=${product.category.slug}`} className="text-sm font-bold uppercase tracking-wider text-emerald-700">
             {product.category.name}

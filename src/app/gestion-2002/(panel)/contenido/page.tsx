@@ -1,4 +1,5 @@
 import { updateSettings, upsertBenefit, upsertHeroSlide, upsertIdea } from "@/app/gestion-2002/actions";
+import { AdminImageUpload } from "@/components/admin-image-upload";
 import { getSettings } from "@/lib/data";
 import { getPrisma, hasDatabase } from "@/lib/prisma";
 
@@ -40,9 +41,13 @@ export default async function AdminContentPage() {
           <input name="newsletterTitle" defaultValue={settings.newsletterTitle ?? ""} placeholder="Titulo newsletter" className="h-11 rounded-md border border-stone-200 px-3" />
           <input name="newsletterText" defaultValue={settings.newsletterText ?? ""} placeholder="Texto newsletter" className="h-11 rounded-md border border-stone-200 px-3" />
         </div>
-        <div className="grid gap-4 md:grid-cols-5">
-          <input name="logoUrl" defaultValue={settings.logoUrl ?? ""} placeholder="Logo URL" className="h-11 rounded-md border border-stone-200 px-3" />
-          <input name="faviconUrl" defaultValue={settings.faviconUrl ?? ""} placeholder="Favicon URL" className="h-11 rounded-md border border-stone-200 px-3" />
+        <div className="grid gap-4 md:grid-cols-2">
+          <AdminImageUpload label="Logo header/footer" name="logoUrl" scope="brand" value={settings.logoUrl} hint="Recomendado: PNG/SVG horizontal. Header usa 44-56px de alto." />
+          <AdminImageUpload label="Favicon" name="faviconUrl" scope="brand" value={settings.faviconUrl} hint="Recomendado: 32x32 o 48x48 en PNG/ICO/SVG." />
+        </div>
+        <AdminImageUpload label="OpenGraph image" name="ogImageUrl" scope="brand" value={settings.ogImageUrl} hint="Recomendado: 1200x630 para compartir en redes." />
+        <div className="grid gap-4 md:grid-cols-4">
+          <input name="logoHeight" defaultValue={settings.logoHeight ?? 48} type="number" min={32} max={96} className="h-11 rounded-md border border-stone-200 px-3" placeholder="Alto logo" />
           <input name="primaryColor" defaultValue={settings.primaryColor ?? "#7c3aed"} type="color" className="h-11 rounded-md border border-stone-200 px-2" />
           <input name="accentColor" defaultValue={settings.accentColor ?? "#f97316"} type="color" className="h-11 rounded-md border border-stone-200 px-2" />
           <input name="radius" defaultValue={settings.radius ?? 10} type="number" className="h-11 rounded-md border border-stone-200 px-3" />
@@ -59,7 +64,7 @@ export default async function AdminContentPage() {
         <form action={upsertHeroSlide} className="mt-4 grid gap-3">
           <div className="grid gap-3 md:grid-cols-2">
             <input name="title" placeholder="Titulo" required className="h-11 rounded-md border border-stone-200 px-3" />
-            <input name="imageUrl" placeholder="Imagen" required className="h-11 rounded-md border border-stone-200 px-3" />
+            <AdminImageUpload label="Imagen hero" name="imageUrl" scope="hero" required />
           </div>
           <input name="subtitle" placeholder="Subtitulo" className="h-11 rounded-md border border-stone-200 px-3" />
           <div className="grid gap-3 md:grid-cols-4">
@@ -71,7 +76,21 @@ export default async function AdminContentPage() {
           <button className="h-10 rounded-md bg-violet-700 px-4 font-bold text-white md:w-fit">Crear slide</button>
         </form>
         <div className="mt-4 grid gap-2 text-sm text-stone-600">
-          {slides.map((slide) => <p key={slide.id}>{slide.title} · {slide.active ? "activo" : "oculto"}</p>)}
+          {slides.map((slide) => (
+            <form key={slide.id} action={upsertHeroSlide} className="grid gap-3 rounded-md border border-stone-100 p-3">
+              <input type="hidden" name="id" value={slide.id} />
+              <input name="title" defaultValue={slide.title} className="h-10 rounded-md border border-stone-200 px-3 font-semibold text-stone-900" />
+              <input name="subtitle" defaultValue={slide.subtitle ?? ""} className="h-10 rounded-md border border-stone-200 px-3" />
+              <AdminImageUpload label="Imagen actual" name="imageUrl" scope="hero" value={slide.imageUrl} />
+              <div className="grid gap-3 md:grid-cols-4">
+                <input name="ctaLabel" defaultValue={slide.ctaLabel ?? ""} className="h-10 rounded-md border border-stone-200 px-3" />
+                <input name="ctaHref" defaultValue={slide.ctaHref ?? ""} className="h-10 rounded-md border border-stone-200 px-3" />
+                <input name="sortOrder" type="number" defaultValue={slide.sortOrder} className="h-10 rounded-md border border-stone-200 px-3" />
+                <label className="flex items-center gap-2 font-semibold text-stone-900"><input name="active" type="checkbox" defaultChecked={slide.active} /> Activo</label>
+              </div>
+              <button className="h-10 rounded-md bg-violet-700 px-4 font-bold text-white md:w-fit">Guardar slide</button>
+            </form>
+          ))}
         </div>
       </section>
 
@@ -80,7 +99,7 @@ export default async function AdminContentPage() {
         <form action={upsertIdea} className="mt-4 grid gap-3">
           <div className="grid gap-3 md:grid-cols-2">
             <input name="title" placeholder="Titulo" required className="h-11 rounded-md border border-stone-200 px-3" />
-            <input name="imageUrl" placeholder="Imagen" required className="h-11 rounded-md border border-stone-200 px-3" />
+            <AdminImageUpload label="Imagen idea" name="imageUrl" scope="ideas" required />
           </div>
           <textarea name="excerpt" placeholder="Resumen" required rows={2} className="rounded-md border border-stone-200 px-3 py-2" />
           <div className="grid gap-3 md:grid-cols-3">
@@ -91,7 +110,20 @@ export default async function AdminContentPage() {
           <button className="h-10 rounded-md bg-violet-700 px-4 font-bold text-white md:w-fit">Crear idea</button>
         </form>
         <div className="mt-4 grid gap-2 text-sm text-stone-600">
-          {ideas.map((idea) => <p key={idea.id}>{idea.title} · {idea.active ? "activa" : "oculta"}</p>)}
+          {ideas.map((idea) => (
+            <form key={idea.id} action={upsertIdea} className="grid gap-3 rounded-md border border-stone-100 p-3">
+              <input type="hidden" name="id" value={idea.id} />
+              <input name="title" defaultValue={idea.title} className="h-10 rounded-md border border-stone-200 px-3 font-semibold text-stone-900" />
+              <textarea name="excerpt" defaultValue={idea.excerpt} rows={2} className="rounded-md border border-stone-200 px-3 py-2" />
+              <AdminImageUpload label="Imagen actual" name="imageUrl" scope="ideas" value={idea.imageUrl} />
+              <div className="grid gap-3 md:grid-cols-3">
+                <input name="href" defaultValue={idea.href ?? ""} className="h-10 rounded-md border border-stone-200 px-3" />
+                <input name="sortOrder" type="number" defaultValue={idea.sortOrder} className="h-10 rounded-md border border-stone-200 px-3" />
+                <label className="flex items-center gap-2 font-semibold text-stone-900"><input name="active" type="checkbox" defaultChecked={idea.active} /> Activa</label>
+              </div>
+              <button className="h-10 rounded-md bg-violet-700 px-4 font-bold text-white md:w-fit">Guardar idea</button>
+            </form>
+          ))}
         </div>
       </section>
 

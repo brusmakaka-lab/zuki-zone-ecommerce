@@ -1,4 +1,5 @@
 import { upsertCategory } from "@/app/gestion-2002/actions";
+import { AdminImageUpload } from "@/components/admin-image-upload";
 import { getPrisma, hasDatabase } from "@/lib/prisma";
 
 export default async function AdminCategoriesPage() {
@@ -14,7 +15,7 @@ export default async function AdminCategoriesPage() {
         <div className="grid gap-4 md:grid-cols-4">
           <input name="name" placeholder="Nombre" required className="h-11 rounded-md border border-stone-200 px-3" />
           <input name="slug" placeholder="Slug" className="h-11 rounded-md border border-stone-200 px-3" />
-          <input name="imageUrl" placeholder="Imagen" className="h-11 rounded-md border border-stone-200 px-3" />
+          <AdminImageUpload label="Imagen" name="imageUrl" scope="categories" />
           <select name="parentId" className="h-11 rounded-md border border-stone-200 px-3">
             <option value="">Categoria principal</option>
             {parents.map((category) => (
@@ -27,10 +28,17 @@ export default async function AdminCategoriesPage() {
       </form>
       <div className="mt-6 grid gap-3">
         {categories.map((category) => (
-          <div key={category.id} className="rounded-lg border border-stone-200 bg-white p-4">
+          <form key={category.id} action={upsertCategory} className="grid gap-3 rounded-lg border border-stone-200 bg-white p-4">
+            <input type="hidden" name="id" value={category.id} />
+            <input type="hidden" name="name" value={category.name} />
+            <input type="hidden" name="slug" value={category.slug} />
+            <input type="hidden" name="description" value={category.description ?? ""} />
+            <input type="hidden" name="parentId" value={category.parentId ?? ""} />
             <p className="font-black">{category.parent ? `${category.parent.name} / ${category.name}` : category.name}</p>
             <p className="text-sm text-stone-500">{category.description}</p>
-          </div>
+            <AdminImageUpload label="Imagen publica" name="imageUrl" scope="categories" value={category.imageUrl} />
+            <button className="h-10 rounded-md bg-violet-700 px-4 font-bold text-white md:w-fit">Guardar imagen</button>
+          </form>
         ))}
       </div>
     </div>

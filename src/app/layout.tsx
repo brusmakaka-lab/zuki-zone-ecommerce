@@ -20,10 +20,30 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Zuki Zone | Tienda online",
-  description: "E-commerce moderno con catalogo, carrito, checkout por WhatsApp y seguimiento de pedidos.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSettings();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const title = `${settings.storeName} | Tienda online`;
+  const description = settings.tagline;
+
+  return {
+    title,
+    description,
+    metadataBase: new URL(siteUrl),
+    icons: {
+      icon: settings.faviconUrl || "/favicon.ico",
+      shortcut: settings.faviconUrl || "/favicon.ico",
+      apple: settings.faviconUrl || "/favicon.ico",
+    },
+    openGraph: {
+      title,
+      description,
+      url: siteUrl,
+      siteName: settings.storeName,
+      images: [settings.ogImageUrl || settings.logoUrl || "/zuki-hero-1.svg"],
+    },
+  };
+}
 
 export default async function RootLayout({
   children,

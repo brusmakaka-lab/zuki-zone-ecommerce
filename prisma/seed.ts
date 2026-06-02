@@ -17,6 +17,8 @@ async function main() {
     address: "Atencion online y retiros coordinados",
     instagramUrl: "https://instagram.com",
     facebookUrl: "https://facebook.com",
+    logoHeight: 48,
+    ogImageUrl: "/zuki-hero-1.svg",
     bannerText: "Envio coordinado en CABA y alrededores. Consultanos por entregas al interior.",
     shippingText: "Despachos coordinados y retiros pactados.",
     paymentText: "Transferencia, efectivo o pago a coordinar por WhatsApp.",
@@ -201,12 +203,13 @@ async function main() {
 
     await prisma.productImage.upsert({
       where: { id: `${product.slug}-main` },
-      update: { url: `/product-${product.slug}.svg`, alt: product.name },
+      update: { url: `/product-${product.slug}.svg`, alt: product.name, isMain: true },
       create: {
         id: `${product.slug}-main`,
         productId: saved.id,
         url: `/product-${product.slug}.svg`,
         alt: product.name,
+        isMain: true,
       },
     });
   }

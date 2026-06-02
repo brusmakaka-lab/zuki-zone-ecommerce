@@ -70,7 +70,8 @@ const productSchema = z.object({
   previousPrice: z.coerce.number().optional(),
   categoryId: z.string().min(1),
   stock: z.coerce.number().int().min(0),
-  imageUrl: z.string().min(1),
+  imageUrls: z.string().optional(),
+  mainImageUrl: z.string().optional(),
   featured: z.string().optional(),
   onSale: z.string().optional(),
   published: z.string().optional(),
@@ -81,6 +82,12 @@ export async function upsertProduct(formData: FormData) {
   await requireAdmin();
   const parsed = productSchema.parse(Object.fromEntries(formData));
   const slug = parsed.slug ? slugify(parsed.slug) : slugify(parsed.name);
+  const imageUrls = (parsed.imageUrls ?? "")
+    .split("\n")
+    .map((url) => url.trim())
+    .filter(Boolean);
+  const mainImageUrl = parsed.mainImageUrl || imageUrls[0] || "/product-fallback.svg";
+  const allImages = Array.from(new Set([mainImageUrl, ...imageUrls].filter(Boolean)));
   const data = {
     name: parsed.name,
     slug,
@@ -99,14 +106,21 @@ export async function upsertProduct(formData: FormData) {
     ? await getPrisma().product.update({ where: { id: parsed.id }, data })
     : await getPrisma().product.create({ data });
 
-  await getPrisma().productImage.upsert({
-    where: { id: `${product.id}-main` },
-    update: { url: parsed.imageUrl, alt: parsed.name },
-    create: { id: `${product.id}-main`, productId: product.id, url: parsed.imageUrl, alt: parsed.name },
+  await getPrisma().productImage.deleteMany({ where: { productId: product.id } });
+  await getPrisma().productImage.createMany({
+    data: allImages.map((url, index) => ({
+      productId: product.id,
+      url,
+      alt: parsed.name,
+      isMain: url === mainImageUrl,
+      sortOrder: index,
+    })),
   });
 
   revalidatePath("/gestion-2002/productos");
   revalidatePath("/catalogo");
+  revalidatePath(`/producto/${slug}`);
+  revalidatePath("/");
 }
 
 export async function deleteProduct(formData: FormData) {
@@ -114,6 +128,8 @@ export async function deleteProduct(formData: FormData) {
   const id = String(formData.get("id"));
   await getPrisma().product.update({ where: { id }, data: { active: false, published: false } });
   revalidatePath("/gestion-2002/productos");
+  revalidatePath("/catalogo");
+  revalidatePath("/");
 }
 
 export async function upsertCategory(formData: FormData) {
@@ -133,6 +149,7 @@ export async function upsertCategory(formData: FormData) {
   }
   revalidatePath("/gestion-2002/categorias");
   revalidatePath("/catalogo");
+  revalidatePath("/");
 }
 
 export async function updateOrderStatus(formData: FormData) {
@@ -175,7 +192,9 @@ export async function updateSettings(formData: FormData) {
       facebookUrl: String(formData.get("facebookUrl")),
       tiktokUrl: String(formData.get("tiktokUrl")),
       logoUrl: String(formData.get("logoUrl")),
+      logoHeight: Number(formData.get("logoHeight") || 48),
       faviconUrl: String(formData.get("faviconUrl")),
+      ogImageUrl: String(formData.get("ogImageUrl")),
       primaryColor: String(formData.get("primaryColor") || "#7c3aed"),
       accentColor: String(formData.get("accentColor") || "#f97316"),
       radius: Number(formData.get("radius") || 10),
@@ -200,7 +219,9 @@ export async function updateSettings(formData: FormData) {
       facebookUrl: String(formData.get("facebookUrl")),
       tiktokUrl: String(formData.get("tiktokUrl")),
       logoUrl: String(formData.get("logoUrl")),
+      logoHeight: Number(formData.get("logoHeight") || 48),
       faviconUrl: String(formData.get("faviconUrl")),
+      ogImageUrl: String(formData.get("ogImageUrl")),
       primaryColor: String(formData.get("primaryColor") || "#7c3aed"),
       accentColor: String(formData.get("accentColor") || "#f97316"),
       radius: Number(formData.get("radius") || 10),
@@ -208,6 +229,7 @@ export async function updateSettings(formData: FormData) {
     },
   });
   revalidatePath("/");
+  revalidatePath("/catalogo");
   revalidatePath("/gestion-2002/contenido");
 }
 
@@ -226,6 +248,7 @@ export async function upsertHeroSlide(formData: FormData) {
   if (id) await getPrisma().heroSlide.update({ where: { id }, data });
   else await getPrisma().heroSlide.create({ data });
   revalidatePath("/");
+  revalidatePath("/catalogo");
   revalidatePath("/gestion-2002/contenido");
 }
 

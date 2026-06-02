@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Search, UserRound } from "lucide-react";
 import { auth } from "@/auth";
 import { CartIndicator } from "@/components/cart/cart-indicator";
@@ -13,9 +14,21 @@ export async function SiteHeader({ settings, categories }: { settings: StoreSett
     <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-md bg-violet-700 text-lg font-black text-white">
-            ZZ
-          </span>
+          {settings.logoUrl ? (
+            <Image
+              src={settings.logoUrl}
+              alt={settings.storeName}
+              width={220}
+              height={settings.logoHeight ?? 48}
+              className="h-10 w-auto object-contain md:h-12"
+              priority
+              unoptimized={settings.logoUrl.endsWith(".svg")}
+            />
+          ) : (
+            <span className="grid h-10 w-10 place-items-center rounded-md bg-violet-700 text-lg font-black text-white">
+              ZZ
+            </span>
+          )}
           <span className="leading-tight">
             <span className="block text-base font-black text-stone-950">{settings.storeName}</span>
             <span className="hidden text-xs text-stone-500 sm:block">Tienda online</span>

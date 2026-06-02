@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Camera, Mail, MapPin, MessageCircle, Share2 } from "lucide-react";
 import type { StoreSettings } from "@/lib/demo-data";
 import { whatsappUrl } from "@/lib/utils";
@@ -8,7 +9,11 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
     <footer className="border-t border-stone-200 bg-stone-950 text-stone-100">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-5 lg:px-8">
         <div>
-          <p className="text-xl font-black">{settings.storeName}</p>
+          {settings.logoUrl ? (
+            <Image src={settings.logoUrl} alt={settings.storeName} width={240} height={64} className="h-14 w-auto object-contain" unoptimized={settings.logoUrl.endsWith(".svg")} />
+          ) : (
+            <p className="text-xl font-black">{settings.storeName}</p>
+          )}
           <p className="mt-3 text-sm leading-6 text-stone-300">{settings.aboutText ?? settings.tagline}</p>
         </div>
         <div>
