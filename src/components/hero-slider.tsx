@@ -41,9 +41,14 @@ export function HeroSlider({ slides }: { slides: Slide[] }) {
             <h1 className="text-4xl font-black leading-tight sm:text-6xl">{active.title}</h1>
             {active.subtitle ? <p className="mt-5 text-lg leading-8 text-stone-100 sm:text-xl">{active.subtitle}</p> : null}
             {active.ctaHref ? (
-              <Link href={active.ctaHref} className="mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-violet-700 px-6 font-black text-white transition hover:bg-violet-600">
-                {active.ctaLabel ?? "Comprar"} <ArrowRight className="h-4 w-4" />
-              </Link>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link href={active.ctaHref} className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-emerald-700 px-6 font-black text-white shadow-lg shadow-emerald-950/20 transition hover:bg-emerald-600">
+                  {active.ctaLabel ?? "Comprar"} <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="/ofertas" className="inline-flex h-12 items-center justify-center rounded-md border border-white/35 bg-white/10 px-6 font-black text-white backdrop-blur transition hover:bg-white/20">
+                  Ver ofertas
+                </Link>
+              </div>
             ) : null}
           </motion.div>
         </div>

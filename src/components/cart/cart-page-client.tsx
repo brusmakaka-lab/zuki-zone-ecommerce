@@ -2,22 +2,54 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "@/components/cart/cart-provider";
+import { ProductCard } from "@/components/product-card";
 import { formatMoney } from "@/lib/utils";
+import type { StoreCategory, StoreProduct } from "@/lib/demo-data";
 
-export function CartPageClient() {
+export function CartPageClient({ recommended, categories }: { recommended: StoreProduct[]; categories: StoreCategory[] }) {
   const { items, total, updateQuantity, removeItem } = useCart();
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
       <h1 className="text-4xl font-black text-stone-950">Carrito</h1>
       {!items.length ? (
-        <div className="mt-8 rounded-lg border border-stone-200 bg-white p-10 text-center">
-          <p className="text-lg font-bold">Tu carrito esta vacio.</p>
-          <Link href="/catalogo" className="mt-5 inline-flex rounded-md bg-emerald-700 px-5 py-3 font-bold text-white">
-            Ver productos
-          </Link>
+        <div className="mt-8 grid gap-8">
+          <section className="rounded-lg border border-stone-200 bg-white p-8 text-center shadow-sm">
+            <ShoppingBag className="mx-auto h-11 w-11 text-emerald-700" />
+            <h2 className="mt-4 text-2xl font-black text-stone-950">Tu carrito esta vacio</h2>
+            <p className="mx-auto mt-2 max-w-xl text-stone-600">Elegí productos del catálogo y volvé para coordinar tu compra por WhatsApp con seguimiento del pedido.</p>
+            <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link href="/catalogo" className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-emerald-700 px-5 font-bold text-white">
+                Seguir comprando
+                <ArrowRight size={18} />
+              </Link>
+              <Link href="/ofertas" className="inline-flex h-12 items-center justify-center rounded-md border border-stone-300 px-5 font-bold text-stone-900">
+                Ver ofertas
+              </Link>
+            </div>
+          </section>
+          {categories.length ? (
+            <section>
+              <h2 className="text-xl font-black text-stone-950">Comprar por categoria</h2>
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                {categories.map((category) => (
+                  <Link key={category.id} href={`/catalogo?categoria=${category.slug}`} className="rounded-lg border border-stone-200 bg-white px-4 py-4 text-center text-sm font-black text-stone-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50">
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
+          {recommended.length ? (
+            <section>
+              <h2 className="text-xl font-black text-stone-950">Recomendados para empezar</h2>
+              <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {recommended.map((product) => <ProductCard key={product.id} product={product} />)}
+              </div>
+            </section>
+          ) : null}
         </div>
       ) : (
         <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_320px]">

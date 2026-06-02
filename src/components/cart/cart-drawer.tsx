@@ -72,6 +72,15 @@ export function CartDrawer() {
                   <div>
                     <ShoppingBag className="mx-auto h-10 w-10 text-stone-300" />
                     <p className="mt-4 font-bold text-stone-950">Tu carrito esta vacio.</p>
+                    <p className="mt-2 text-sm leading-6 text-stone-500">Agrega productos y volve para coordinar tu compra por WhatsApp.</p>
+                    <div className="mt-5 grid gap-2">
+                      <Link onClick={closeDrawer} href="/catalogo" className="inline-flex h-11 items-center justify-center rounded-md bg-emerald-700 px-5 font-bold text-white">
+                        Ver productos
+                      </Link>
+                      <Link onClick={closeDrawer} href="/ofertas" className="inline-flex h-11 items-center justify-center rounded-md border border-stone-300 px-5 font-bold text-stone-900">
+                        Ver ofertas
+                      </Link>
+                    </div>
                   </div>
                 </div>
               )}

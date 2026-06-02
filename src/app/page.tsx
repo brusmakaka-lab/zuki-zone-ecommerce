@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CreditCard, MapPinned, PackageCheck, Store, Truck } from "lucide-react";
+import { ArrowRight, CreditCard, MapPinned, MessageCircle, PackageCheck, ShieldCheck, Store, Truck } from "lucide-react";
 import { HeroSlider } from "@/components/hero-slider";
 import { ProductCarousel } from "@/components/product-carousel";
 import { ScrollReveal } from "@/components/scroll-reveal";
@@ -31,6 +31,24 @@ export default async function Home() {
     <div className="bg-stone-50">
       <HeroSlider slides={slides} />
 
+      <section className="border-b border-stone-200 bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+          <div>
+            <p className="text-sm font-black uppercase tracking-wider text-emerald-700">Compra simple y cercana</p>
+            <p className="mt-1 text-sm text-stone-600">{settings.bannerText ?? "Coordinamos tu pedido por WhatsApp con atencion personalizada."}</p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Link href="/catalogo" className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-black text-white">
+              Ver catalogo
+              <ArrowRight size={17} />
+            </Link>
+            <Link href="/ofertas" className="inline-flex h-11 items-center justify-center rounded-md border border-stone-300 px-4 text-sm font-black text-stone-900">
+              Ofertas activas
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <ScrollReveal className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {benefits.map((benefit) => {
@@ -43,6 +61,23 @@ export default async function Home() {
               </div>
             );
           })}
+        </div>
+      </ScrollReveal>
+
+      <ScrollReveal className="mx-auto max-w-7xl px-4 pb-6 sm:px-6 lg:px-8">
+        <div className="grid gap-3 rounded-lg border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-950 md:grid-cols-3">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="h-5 w-5 text-emerald-700" />
+            <span className="font-bold">Pedido registrado y con seguimiento</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <CreditCard className="h-5 w-5 text-emerald-700" />
+            <span className="font-bold">Pagas al coordinar la compra</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <MessageCircle className="h-5 w-5 text-emerald-700" />
+            <span className="font-bold">Atencion directa por WhatsApp</span>
+          </div>
         </div>
       </ScrollReveal>
 
@@ -86,7 +121,7 @@ export default async function Home() {
           title="Ofertas"
           products={offers}
           action={
-            <Link href="/catalogo?oferta=1" className="hidden rounded-md bg-orange-500 px-4 py-2 text-sm font-black text-white sm:inline-flex">
+            <Link href="/ofertas" className="hidden rounded-md bg-orange-500 px-4 py-2 text-sm font-black text-white sm:inline-flex">
               Ver mas
             </Link>
           }

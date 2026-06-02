@@ -14,12 +14,16 @@ export type StoreProduct = {
   id: string;
   name: string;
   slug: string;
+  shortDescription?: string | null;
   description: string;
   price: number;
   previousPrice: number | null;
   stock: number;
+  minStock?: number;
+  tags?: string[];
   featured: boolean;
   onSale: boolean;
+  isNew?: boolean;
   published: boolean;
   active: boolean;
   category: StoreCategory;

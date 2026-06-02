@@ -5,8 +5,12 @@ import { formatMoney } from "@/lib/utils";
 import type { StoreProduct } from "@/lib/demo-data";
 
 export function ProductCard({ product }: { product: StoreProduct }) {
+  const discount = product.previousPrice
+    ? Math.round(((product.previousPrice - product.price) / product.previousPrice) * 100)
+    : 0;
+
   return (
-    <article className="group overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-2xl">
+    <article className="group overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm ring-1 ring-transparent transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl hover:ring-emerald-100">
       <Link href={`/producto/${product.slug}`} className="block">
         <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
           <Image
@@ -16,12 +20,15 @@ export function ProductCard({ product }: { product: StoreProduct }) {
             sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
             className="object-cover transition duration-500 group-hover:scale-105"
           />
-          <div className="absolute left-3 top-3 flex gap-2">
+          <div className="absolute left-3 top-3 flex flex-wrap gap-2">
             {product.onSale ? (
-              <span className="rounded-full bg-rose-600 px-3 py-1 text-xs font-bold text-white">Oferta</span>
+              <span className="rounded-full bg-rose-600 px-3 py-1 text-xs font-bold text-white">{discount ? `${discount}% off` : "Oferta"}</span>
             ) : null}
             {product.featured ? (
               <span className="rounded-full bg-stone-900 px-3 py-1 text-xs font-bold text-white">Destacado</span>
+            ) : null}
+            {product.isNew ? (
+              <span className="rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white">Nuevo</span>
             ) : null}
           </div>
           <div className="absolute inset-x-4 bottom-4 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
@@ -35,6 +42,7 @@ export function ProductCard({ product }: { product: StoreProduct }) {
           <Link href={`/producto/${product.slug}`} className="mt-1 block text-lg font-semibold text-stone-950">
             {product.name}
           </Link>
+          {product.shortDescription ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-stone-500">{product.shortDescription}</p> : null}
         </div>
         <div className="flex items-end justify-between gap-3">
           <div>

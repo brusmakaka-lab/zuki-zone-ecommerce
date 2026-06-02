@@ -5,15 +5,19 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import {
+  AlertTriangle,
   ArrowUpDown,
   BadgePercent,
   Boxes,
+  ChevronLeft,
+  ChevronRight,
   Copy,
   Edit,
   Eye,
   EyeOff,
   Filter,
   Grid2X2,
+  ImageOff,
   ImagePlus,
   Layers3,
   Package,
@@ -78,7 +82,7 @@ const tabs = ["Basico", "Precio y stock", "Categoria", "Imagenes", "Publicacion"
 
 export function AdminProductsManager({ products, categories }: Props) {
   const searchParams = useSearchParams();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [categoryId, setCategoryId] = useState("");
   const [subcategoryId, setSubcategoryId] = useState("");
   const [status, setStatus] = useState("all");
@@ -86,12 +90,14 @@ export function AdminProductsManager({ products, categories }: Props) {
   const [flag, setFlag] = useState("all");
   const [sort, setSort] = useState("recent");
   const [view, setView] = useState<"table" | "cards">("table");
+  const [page, setPage] = useState(Number(searchParams.get("page") ?? "1") || 1);
   const initialEditing = products.find((item) => item.id === searchParams.get("edit")) ?? null;
   const [editing, setEditing] = useState<AdminProduct | null>(initialEditing);
   const [selected, setSelected] = useState<string[]>([]);
 
   const parents = categories.filter((category) => !category.parentId);
   const subcategories = categories.filter((category) => category.parentId);
+  const pageSize = 20;
 
   const metrics = useMemo(
     () => ({
@@ -101,6 +107,8 @@ export function AdminProductsManager({ products, categories }: Props) {
       sale: products.filter((product) => product.onSale).length,
       featured: products.filter((product) => product.featured).length,
       drafts: products.filter((product) => !product.published || !product.active).length,
+      withoutImage: products.filter((product) => !product.images.length).length,
+      lowStock: products.filter((product) => product.stock > 0 && product.stock <= product.minStock).length,
     }),
     [products],
   );
@@ -142,12 +150,37 @@ export function AdminProductsManager({ products, categories }: Props) {
       });
   }, [categoryId, flag, products, query, sort, status, stock, subcategoryId]);
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  function updateQuery(value: string) {
+    setQuery(value);
+    setPage(1);
+    const params = new URLSearchParams(window.location.search);
+    if (value.trim()) params.set("q", value.trim());
+    else params.delete("q");
+    params.delete("page");
+    const next = params.toString();
+    window.history.replaceState(null, "", next ? `?${next}` : window.location.pathname);
+  }
+
+  function goToPage(nextPage: number) {
+    const bounded = Math.max(1, Math.min(nextPage, totalPages));
+    setPage(bounded);
+    const params = new URLSearchParams(window.location.search);
+    if (bounded > 1) params.set("page", String(bounded));
+    else params.delete("page");
+    const next = params.toString();
+    window.history.replaceState(null, "", next ? `?${next}` : window.location.pathname);
+  }
+
   function toggleSelected(id: string) {
     setSelected((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
   }
 
   function toggleAllVisible() {
-    const visibleIds = filtered.map((product) => product.id);
+    const visibleIds = paginated.map((product) => product.id);
     const allVisibleSelected = visibleIds.every((id) => selected.includes(id));
     setSelected(allVisibleSelected ? selected.filter((id) => !visibleIds.includes(id)) : Array.from(new Set([...selected, ...visibleIds])));
   }
@@ -185,11 +218,19 @@ export function AdminProductsManager({ products, categories }: Props) {
         <Metric label="Ocultos" value={metrics.drafts} icon={<EyeOff size={18} />} />
       </section>
 
+      {(metrics.withoutImage || metrics.noStock || metrics.lowStock) ? (
+        <section className="grid gap-3 lg:grid-cols-3">
+          {metrics.withoutImage ? <AlertCard icon={<ImageOff size={18} />} title="Productos sin imagen" text={`${metrics.withoutImage} productos necesitan imagen para verse mejor en catalogo.`} /> : null}
+          {metrics.noStock ? <AlertCard icon={<Boxes size={18} />} title="Productos sin stock" text={`${metrics.noStock} productos no se pueden vender hasta reponer stock.`} danger /> : null}
+          {metrics.lowStock ? <AlertCard icon={<AlertTriangle size={18} />} title="Stock bajo" text={`${metrics.lowStock} productos estan cerca de agotarse.`} /> : null}
+        </section>
+      ) : null}
+
       <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
         <div className="grid gap-3 lg:grid-cols-[1.4fr_repeat(5,1fr)_auto]">
           <label className="relative block">
             <Search className="pointer-events-none absolute left-3 top-3 text-stone-400" size={18} />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por nombre, SKU o descripcion" className="h-11 w-full rounded-md border border-stone-200 pl-10 pr-3 text-sm outline-none focus:border-emerald-600" />
+            <input value={query} onChange={(event) => updateQuery(event.target.value)} placeholder="Buscar por nombre, SKU o descripcion" className="h-11 w-full rounded-md border border-stone-200 pl-10 pr-3 text-sm outline-none focus:border-emerald-600" />
           </label>
           <Select value={categoryId} onChange={setCategoryId}>
             <option value="">Todas las categorias</option>
@@ -237,13 +278,17 @@ export function AdminProductsManager({ products, categories }: Props) {
 
       {filtered.length ? (
         view === "table" ? (
-          <ProductTable products={filtered} selected={selected} onToggle={toggleSelected} onToggleAll={toggleAllVisible} onEdit={setEditing} />
+          <ProductTable products={paginated} selected={selected} onToggle={toggleSelected} onToggleAll={toggleAllVisible} onEdit={setEditing} />
         ) : (
-          <ProductCards products={filtered} selected={selected} onToggle={toggleSelected} onEdit={setEditing} />
+          <ProductCards products={paginated} selected={selected} onToggle={toggleSelected} onEdit={setEditing} />
         )
       ) : (
         <EmptyProducts onCreate={() => setEditing(emptyProduct(categories[0]?.id ?? ""))} />
       )}
+
+      {filtered.length ? (
+        <Pagination current={safePage} total={totalPages} totalItems={filtered.length} pageSize={pageSize} onPage={goToPage} />
+      ) : null}
 
       {editing ? (
         <ProductEditor product={editing} categories={categories} onClose={() => setEditing(null)} />
@@ -522,7 +567,7 @@ function ImageManager({
         const response = await fetch("/api/admin/upload", { method: "POST", body: data });
         const payload = (await response.json().catch(() => null)) as { url?: string; error?: string } | null;
         if (!response.ok || !payload?.url) {
-          setMessage(payload?.error ?? "No se pudo subir una imagen. Revisa Vercel Blob.");
+          setMessage(payload?.error ?? "No se pudo subir una imagen. Revisa la configuracion de imagenes.");
           return;
         }
         uploaded.push(payload.url);
@@ -555,7 +600,7 @@ function ImageManager({
       >
         <ImagePlus className="text-emerald-700" size={30} />
         <p className="mt-2 font-black text-stone-950">Arrastra imagenes o subi varias juntas</p>
-        <p className="mt-1 text-sm text-stone-500">JPG, PNG, WEBP, SVG o ICO. Si Blob no esta configurado se muestra el error real.</p>
+        <p className="mt-1 text-sm text-stone-500">JPG, PNG, WEBP, SVG o ICO. Si la carga no esta activa, vas a ver un mensaje claro.</p>
         <label className="mt-4 inline-flex h-10 cursor-pointer items-center rounded-md bg-stone-950 px-4 text-sm font-bold text-white">
           {pending ? "Subiendo..." : "Seleccionar imagenes"}
           <input type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml,image/x-icon" multiple className="sr-only" onChange={(event) => event.target.files && uploadFiles(event.target.files)} />
@@ -679,6 +724,51 @@ function Metric({ label, value, icon, danger }: { label: string; value: number; 
       <div className={cn("grid h-9 w-9 place-items-center rounded-md", danger ? "bg-rose-100 text-rose-800" : "bg-emerald-100 text-emerald-800")}>{icon}</div>
       <p className="mt-3 text-2xl font-black text-stone-950">{value}</p>
       <p className="text-sm font-semibold text-stone-500">{label}</p>
+    </div>
+  );
+}
+
+function AlertCard({ icon, title, text, danger }: { icon: React.ReactNode; title: string; text: string; danger?: boolean }) {
+  return (
+    <div className={cn("flex gap-3 rounded-lg border p-4 shadow-sm", danger ? "border-rose-200 bg-rose-50" : "border-amber-200 bg-amber-50")}>
+      <div className={cn("mt-0.5", danger ? "text-rose-700" : "text-amber-700")}>{icon}</div>
+      <div>
+        <p className={cn("font-black", danger ? "text-rose-950" : "text-amber-950")}>{title}</p>
+        <p className={cn("mt-1 text-sm leading-6", danger ? "text-rose-800" : "text-amber-800")}>{text}</p>
+      </div>
+    </div>
+  );
+}
+
+function Pagination({
+  current,
+  total,
+  totalItems,
+  pageSize,
+  onPage,
+}: {
+  current: number;
+  total: number;
+  totalItems: number;
+  pageSize: number;
+  onPage: (page: number) => void;
+}) {
+  const from = (current - 1) * pageSize + 1;
+  const to = Math.min(current * pageSize, totalItems);
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-stone-200 bg-white p-4 text-sm shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <p className="font-semibold text-stone-600">Mostrando {from}-{to} de {totalItems} productos</p>
+      <div className="flex items-center gap-2">
+        <button disabled={current <= 1} onClick={() => onPage(current - 1)} className="inline-flex h-10 items-center gap-2 rounded-md border border-stone-200 px-3 font-bold disabled:opacity-40">
+          <ChevronLeft size={16} />
+          Anterior
+        </button>
+        <span className="rounded-md bg-stone-100 px-3 py-2 font-black text-stone-800">{current} / {total}</span>
+        <button disabled={current >= total} onClick={() => onPage(current + 1)} className="inline-flex h-10 items-center gap-2 rounded-md border border-stone-200 px-3 font-bold disabled:opacity-40">
+          Siguiente
+          <ChevronRight size={16} />
+        </button>
+      </div>
     </div>
   );
 }
