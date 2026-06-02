@@ -63,17 +63,26 @@ export async function updateAdminCredentials(_: unknown, formData: FormData) {
 
 const productSchema = z.object({
   id: z.string().optional(),
-  name: z.string().min(2),
+  name: z.string().trim().min(2, "El nombre es obligatorio."),
   slug: z.string().optional(),
-  description: z.string().min(8),
-  price: z.coerce.number().positive(),
+  sku: z.string().optional(),
+  shortDescription: z.string().optional(),
+  description: z.string().trim().min(8, "Agrega una descripcion completa."),
+  price: z.coerce.number().positive("El precio debe ser mayor a cero."),
   previousPrice: z.coerce.number().optional(),
-  categoryId: z.string().min(1),
-  stock: z.coerce.number().int().min(0),
+  categoryId: z.string().min(1, "Elegi una categoria."),
+  subcategoryId: z.string().optional(),
+  stock: z.coerce.number().int().min(0, "El stock no puede ser negativo."),
+  minStock: z.coerce.number().int().min(0).optional(),
+  tags: z.string().optional(),
+  sortOrder: z.coerce.number().int().optional(),
+  seoTitle: z.string().optional(),
+  seoDescription: z.string().optional(),
   imageUrls: z.string().optional(),
   mainImageUrl: z.string().optional(),
   featured: z.string().optional(),
   onSale: z.string().optional(),
+  isNew: z.string().optional(),
   published: z.string().optional(),
   active: z.string().optional(),
 });
@@ -82,6 +91,11 @@ export async function upsertProduct(formData: FormData) {
   await requireAdmin();
   const parsed = productSchema.parse(Object.fromEntries(formData));
   const slug = parsed.slug ? slugify(parsed.slug) : slugify(parsed.name);
+  const sku = parsed.sku?.trim() || null;
+  const tags = (parsed.tags ?? "")
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
   const imageUrls = (parsed.imageUrls ?? "")
     .split("\n")
     .map((url) => url.trim())
@@ -91,20 +105,37 @@ export async function upsertProduct(formData: FormData) {
   const data = {
     name: parsed.name,
     slug,
+    sku,
+    shortDescription: parsed.shortDescription?.trim() || null,
     description: parsed.description,
     price: parsed.price.toFixed(2),
     previousPrice: parsed.previousPrice ? parsed.previousPrice.toFixed(2) : null,
     categoryId: parsed.categoryId,
+    subcategoryId: parsed.subcategoryId || null,
     stock: parsed.stock,
+    minStock: parsed.minStock ?? 3,
+    tags,
     featured: parsed.featured === "on",
     onSale: parsed.onSale === "on",
+    isNew: parsed.isNew === "on",
     published: parsed.published === "on",
     active: parsed.active === "on",
+    sortOrder: parsed.sortOrder ?? 0,
+    seoTitle: parsed.seoTitle?.trim() || null,
+    seoDescription: parsed.seoDescription?.trim() || null,
   };
 
-  const product = parsed.id
-    ? await getPrisma().product.update({ where: { id: parsed.id }, data })
-    : await getPrisma().product.create({ data });
+  let product;
+  try {
+    product = parsed.id
+      ? await getPrisma().product.update({ where: { id: parsed.id }, data })
+      : await getPrisma().product.create({ data });
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
+      throw new Error("El slug o SKU ya esta en uso. Cambialo y volve a guardar.");
+    }
+    throw error;
+  }
 
   await getPrisma().productImage.deleteMany({ where: { productId: product.id } });
   await getPrisma().productImage.createMany({
@@ -127,6 +158,105 @@ export async function deleteProduct(formData: FormData) {
   await requireAdmin();
   const id = String(formData.get("id"));
   await getPrisma().product.update({ where: { id }, data: { active: false, published: false } });
+  revalidatePath("/gestion-2002/productos");
+  revalidatePath("/catalogo");
+  revalidatePath("/");
+}
+
+export async function updateProductQuickAction(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  const action = String(formData.get("action") ?? "");
+  const value = formData.get("value") === "true";
+  if (!id) throw new Error("Producto invalido.");
+
+  const data =
+    action === "published"
+      ? { published: value, active: value }
+      : action === "featured"
+        ? { featured: value }
+        : action === "onSale"
+          ? { onSale: value }
+          : null;
+
+  if (!data) throw new Error("Accion no soportada.");
+  const product = await getPrisma().product.update({ where: { id }, data, select: { slug: true } });
+  revalidatePath("/gestion-2002/productos");
+  revalidatePath("/catalogo");
+  revalidatePath(`/producto/${product.slug}`);
+  revalidatePath("/");
+}
+
+export async function duplicateProduct(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  const product = await getPrisma().product.findUnique({
+    where: { id },
+    include: { images: { orderBy: [{ isMain: "desc" }, { sortOrder: "asc" }] } },
+  });
+  if (!product) throw new Error("Producto no encontrado.");
+
+  const copy = await getPrisma().product.create({
+    data: {
+      name: `${product.name} copia`,
+      slug: `${product.slug}-copia-${Date.now().toString(36)}`,
+      sku: product.sku ? `${product.sku}-COPIA-${Date.now().toString(36)}` : null,
+      shortDescription: product.shortDescription,
+      description: product.description,
+      price: product.price,
+      previousPrice: product.previousPrice,
+      stock: product.stock,
+      minStock: product.minStock,
+      tags: product.tags,
+      featured: false,
+      onSale: product.onSale,
+      isNew: product.isNew,
+      published: false,
+      active: false,
+      sortOrder: product.sortOrder,
+      seoTitle: product.seoTitle,
+      seoDescription: product.seoDescription,
+      categoryId: product.categoryId,
+      subcategoryId: product.subcategoryId,
+      images: {
+        create: product.images.map((image, index) => ({
+          url: image.url,
+          alt: image.alt,
+          isMain: image.isMain,
+          sortOrder: index,
+        })),
+      },
+    },
+  });
+
+  revalidatePath("/gestion-2002/productos");
+  redirect(`/gestion-2002/productos?edit=${copy.id}`);
+}
+
+export async function bulkUpdateProducts(formData: FormData) {
+  await requireAdmin();
+  const ids = formData.getAll("ids").map(String).filter(Boolean);
+  const action = String(formData.get("bulkAction") ?? "");
+  const categoryId = String(formData.get("bulkCategoryId") ?? "");
+  if (!ids.length) throw new Error("Selecciona al menos un producto.");
+
+  const data =
+    action === "publish"
+      ? { published: true, active: true }
+      : action === "hide"
+        ? { published: false, active: false }
+        : action === "sale-on"
+          ? { onSale: true }
+          : action === "sale-off"
+            ? { onSale: false }
+            : action === "delete"
+              ? { published: false, active: false }
+              : action === "category" && categoryId
+                ? { categoryId }
+                : null;
+
+  if (!data) throw new Error("Elegi una accion masiva valida.");
+  await getPrisma().product.updateMany({ where: { id: { in: ids } }, data });
   revalidatePath("/gestion-2002/productos");
   revalidatePath("/catalogo");
   revalidatePath("/");
