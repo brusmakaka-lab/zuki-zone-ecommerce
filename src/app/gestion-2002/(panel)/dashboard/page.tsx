@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ExternalLink, ImageOff, PackagePlus, Palette, Plus, Tags } from "lucide-react";
-import { OrderStatus } from "@prisma/client";
+import { AnalyticsEventType, OrderStatus } from "@prisma/client";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { orderStatusLabels } from "@/lib/order-status";
 import { getPrisma, hasDatabase } from "@/lib/prisma";
@@ -14,10 +14,10 @@ export default async function AdminDashboardPage() {
   }
 
   const prisma = getPrisma();
-  const [orders, products, lowStock, latestProducts, productsWithoutImage, noStock] = await Promise.all([
+  const [orders, products, lowStock, latestProducts, productsWithoutImage, noStock, events, viewedProducts] = await Promise.all([
     prisma.order.findMany({ include: { items: true }, orderBy: { createdAt: "desc" }, take: 100 }),
     prisma.product.count(),
-    prisma.product.findMany({ where: { stock: { lte: 5 } }, take: 8, orderBy: { stock: "asc" } }),
+    prisma.product.findMany({ where: { stock: { gt: 0, lte: 5 } }, take: 8, orderBy: { stock: "asc" } }),
     prisma.product.findMany({
       include: { images: { orderBy: [{ isMain: "desc" }, { sortOrder: "asc" }], take: 1 } },
       take: 6,
@@ -25,6 +25,14 @@ export default async function AdminDashboardPage() {
     }),
     prisma.product.findMany({ where: { images: { none: {} } }, take: 6, orderBy: { updatedAt: "desc" } }),
     prisma.product.findMany({ where: { stock: { lte: 0 } }, take: 6, orderBy: { updatedAt: "desc" } }),
+    prisma.analyticsEvent.findMany({ take: 1000, orderBy: { createdAt: "desc" } }),
+    prisma.analyticsEvent.groupBy({
+      by: ["productId"],
+      where: { type: AnalyticsEventType.PRODUCT_VIEW, productId: { not: null } },
+      _count: { _all: true },
+      orderBy: { _count: { productId: "desc" } },
+      take: 5,
+    }),
   ]);
 
   const total = orders.reduce((sum, order) => sum + Number(order.total), 0);
@@ -37,6 +45,15 @@ export default async function AdminDashboardPage() {
     consulted.set(item.productName, (consulted.get(item.productName) ?? 0) + item.quantity);
   });
   const topProducts = [...consulted.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const viewedProductIds = viewedProducts.map((item) => item.productId).filter(Boolean) as string[];
+  const viewedProductRows = viewedProductIds.length
+    ? await prisma.product.findMany({ where: { id: { in: viewedProductIds } }, select: { id: true, name: true } })
+    : [];
+  const eventCount = (type: AnalyticsEventType) => events.filter((event) => event.type === type).length;
+  const productViews = eventCount(AnalyticsEventType.PRODUCT_VIEW);
+  const addToCarts = eventCount(AnalyticsEventType.ADD_TO_CART);
+  const ordersCreated = eventCount(AnalyticsEventType.ORDER_CREATED);
+  const conversion = productViews ? Math.round((ordersCreated / productViews) * 100) : 0;
 
   return (
     <div className="grid gap-6">
@@ -78,10 +95,17 @@ export default async function AdminDashboardPage() {
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Metric label="Ventas/consultas" value={String(orders.length)} />
+        <Metric label="Pedidos totales" value={String(orders.length)} />
+        <Metric label="Pedidos nuevos" value={String(orders.filter((order) => order.status === OrderStatus.CONSULTA_RECIBIDA).length)} />
+        <Metric label="Pedidos cerrados" value={String(orders.filter((order) => order.status === OrderStatus.ENTREGADO).length)} />
         <Metric label="Total cotizado" value={formatMoney(total)} />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-4">
         <Metric label="Productos" value={String(products)} />
         <Metric label="Stock bajo" value={String(lowStock.length)} />
+        <Metric label="Sin imagen" value={String(productsWithoutImage.length)} />
+        <Metric label="Clicks WhatsApp" value={String(eventCount(AnalyticsEventType.WHATSAPP_CLICK))} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -108,6 +132,29 @@ export default async function AdminDashboardPage() {
             ) : (
               <p className="text-sm text-stone-500">Sin pedidos todavia.</p>
             )}
+          </div>
+        </Panel>
+
+        <Panel title="Analytics simple">
+          <div className="grid gap-2">
+            <div className="flex justify-between border-b border-stone-100 py-2 text-sm"><span>Vistas producto</span><strong>{productViews}</strong></div>
+            <div className="flex justify-between border-b border-stone-100 py-2 text-sm"><span>Agregados al carrito</span><strong>{addToCarts}</strong></div>
+            <div className="flex justify-between border-b border-stone-100 py-2 text-sm"><span>Pedidos creados</span><strong>{ordersCreated}</strong></div>
+            <div className="flex justify-between py-2 text-sm"><span>Conversion vista a pedido</span><strong>{conversion}%</strong></div>
+          </div>
+        </Panel>
+
+        <Panel title="Productos mas vistos">
+          <div className="grid gap-2">
+            {viewedProducts.length ? viewedProducts.map((item) => {
+              const product = viewedProductRows.find((row) => row.id === item.productId);
+              return (
+                <div key={item.productId ?? "unknown"} className="flex justify-between border-b border-stone-100 py-2 text-sm">
+                  <span>{product?.name ?? "Producto eliminado"}</span>
+                  <strong>{item._count._all}</strong>
+                </div>
+              );
+            }) : <p className="text-sm text-stone-500">Sin vistas registradas todavia.</p>}
           </div>
         </Panel>
 
@@ -150,6 +197,18 @@ export default async function AdminDashboardPage() {
           <div className="grid gap-3">
             <ActionList title="Productos sin imagen" items={productsWithoutImage.map((product) => product.name)} href="/gestion-2002/productos" />
             <ActionList title="Productos sin stock" items={noStock.map((product) => product.name)} href="/gestion-2002/productos" />
+          </div>
+        </Panel>
+
+        <Panel title="Ultimos pedidos">
+          <div className="grid gap-2">
+            {orders.slice(0, 6).map((order) => (
+              <Link key={order.id} href="/gestion-2002/pedidos" className="flex justify-between border-b border-stone-100 py-2 text-sm hover:text-emerald-800">
+                <span>#{order.orderNumber} · {order.customerName}</span>
+                <strong>{formatMoney(Number(order.total))}</strong>
+              </Link>
+            ))}
+            {!orders.length ? <p className="text-sm text-stone-500">Sin pedidos todavia.</p> : null}
           </div>
         </Panel>
       </div>

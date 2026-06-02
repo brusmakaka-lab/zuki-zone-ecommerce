@@ -287,11 +287,13 @@ export async function updateOrderStatus(formData: FormData) {
   const orderId = String(formData.get("orderId"));
   const status = formData.get("status") as OrderStatus;
   const note = String(formData.get("note") ?? "");
+  const adminNote = String(formData.get("adminNote") ?? "");
 
   await getPrisma().order.update({
     where: { id: orderId },
     data: {
       status,
+      adminNote: adminNote || null,
       statusHistory: { create: { status, note: note || null } },
     },
   });

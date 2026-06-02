@@ -2,7 +2,9 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { CreditCard, MessageCircle, ShieldCheck, Truck } from "lucide-react";
 import { createCheckoutOrder } from "@/app/actions";
+import { CheckoutStartedTracker } from "@/components/analytics-trackers";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatMoney } from "@/lib/utils";
 
@@ -24,6 +26,7 @@ export function CheckoutClient({ userEmail, userName }: { userEmail: string; use
 
   return (
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_380px] lg:px-8">
+      <CheckoutStartedTracker enabled={items.length > 0} />
       <section>
         <h1 className="text-4xl font-black text-stone-950">Checkout</h1>
         <p className="mt-2 text-stone-600">Confirmamos tu pedido por WhatsApp para coordinar pago, retiro o envio.</p>
@@ -82,7 +85,22 @@ export function CheckoutClient({ userEmail, userName }: { userEmail: string; use
           <span>Total</span>
           <span>{formatMoney(total)}</span>
         </div>
+        <div className="mt-5 grid gap-3 border-t border-stone-100 pt-5 text-sm">
+          <Trust icon={<MessageCircle size={16} />} text="Confirmacion directa por WhatsApp" />
+          <Trust icon={<Truck size={16} />} text="Envio o retiro coordinado" />
+          <Trust icon={<CreditCard size={16} />} text="Pago a coordinar antes de preparar" />
+          <Trust icon={<ShieldCheck size={16} />} text="Pedido registrado con seguimiento" />
+        </div>
       </aside>
+    </div>
+  );
+}
+
+function Trust({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <div className="flex items-center gap-2 rounded-md bg-stone-50 px-3 py-2 font-semibold text-stone-700">
+      <span className="text-emerald-700">{icon}</span>
+      {text}
     </div>
   );
 }

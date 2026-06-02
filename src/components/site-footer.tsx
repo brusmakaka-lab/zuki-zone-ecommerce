@@ -30,6 +30,9 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
             <Link href="/ofertas">Ofertas</Link>
             <Link href="/checkout">Checkout</Link>
             <Link href="/mi-cuenta">Mi cuenta</Link>
+            <Link href="/envios">Envios</Link>
+            <Link href="/cambios-devoluciones">Cambios y devoluciones</Link>
+            <Link href="/preguntas-frecuentes">Preguntas frecuentes</Link>
           </div>
         </div>
         <div>

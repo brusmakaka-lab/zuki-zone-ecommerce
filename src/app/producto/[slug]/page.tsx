@@ -1,13 +1,38 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CreditCard, HelpCircle, MessageCircle, PackageCheck, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import { ProductViewTracker, TrackedWhatsAppLink } from "@/components/analytics-trackers";
 import { ProductCard } from "@/components/product-card";
 import { ProductGallery } from "@/components/product-gallery";
 import { getProductBySlug, getProducts, getSettings } from "@/lib/data";
 import { formatMoney, whatsappUrl } from "@/lib/utils";
 
 type Params = Promise<{ slug: string }>;
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+  const settings = await getSettings();
+  if (!product) return {};
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://zuki-zone.vercel.app";
+  const title = product.seoTitle || `${product.name} | ${settings.storeName}`;
+  const description = product.seoDescription || product.shortDescription || product.description;
+  const image = product.images[0]?.url || settings.ogImageUrl || settings.logoUrl || "/zuki-hero-1.svg";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${siteUrl}/producto/${product.slug}`,
+      images: [image],
+      type: "website",
+    },
+  };
+}
 
 export default async function ProductDetailPage({ params }: { params: Params }) {
   const { slug } = await params;
@@ -27,9 +52,26 @@ export default async function ProductDetailPage({ params }: { params: Params }) 
     ).values(),
   ).slice(0, 4);
   const productMessage = `Hola Zuki Zone, quiero consultar por ${product.name} (${formatMoney(product.price)}).`;
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.shortDescription || product.description,
+    image: product.images.map((image) => image.url),
+    sku: product.sku || product.slug,
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "ARS",
+      price: product.price,
+      availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://zuki-zone.vercel.app"}/producto/${product.slug}`,
+    },
+  };
 
   return (
     <div className="bg-stone-50">
+      <ProductViewTracker productId={product.id} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
         <ProductGallery images={product.images} productName={product.name} />
@@ -58,10 +100,10 @@ export default async function ProductDetailPage({ params }: { params: Params }) 
               <Link href="/checkout" className="inline-flex h-12 items-center justify-center rounded-md border border-stone-300 px-6 font-bold text-stone-950 hover:border-emerald-700">
                 Comprar ahora
               </Link>
-              <a href={whatsappUrl(settings.whatsappNumber, productMessage)} className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-emerald-600 px-6 font-bold text-emerald-700">
+              <TrackedWhatsAppLink href={whatsappUrl(settings.whatsappNumber, productMessage)} productId={product.id} className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-emerald-600 px-6 font-bold text-emerald-700">
                 <MessageCircle size={18} />
                 Consultar
-              </a>
+              </TrackedWhatsAppLink>
             </div>
           </div>
           <div className="mt-6 grid gap-3 border-t border-stone-100 pt-5 sm:grid-cols-2">

@@ -136,6 +136,7 @@ model Product {
   images         ProductImage[]
   cartItems      CartItem[]
   orderItems     OrderItem[]
+  analyticsEvents AnalyticsEvent[]
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
@@ -190,6 +191,7 @@ model Order {
   city            String
   reference       String?
   observations    String?
+  adminNote       String?
   subtotal        Decimal              @db.Decimal(12, 2)
   total           Decimal              @db.Decimal(12, 2)
   paymentMethod   String               @default("CONSULTA_WHATSAPP")
@@ -202,6 +204,27 @@ model Order {
 
   @@index([userId])
   @@index([status])
+}
+
+enum AnalyticsEventType {
+  PRODUCT_VIEW
+  ADD_TO_CART
+  CHECKOUT_STARTED
+  ORDER_CREATED
+  WHATSAPP_CLICK
+}
+
+model AnalyticsEvent {
+  id        String             @id @default(cuid())
+  type      AnalyticsEventType
+  productId String?
+  product   Product?           @relation(fields: [productId], references: [id], onDelete: SetNull)
+  metadata  Json?
+  createdAt DateTime           @default(now())
+
+  @@index([type])
+  @@index([productId])
+  @@index([createdAt])
 }
 
 model OrderItem {

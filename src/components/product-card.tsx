@@ -8,6 +8,7 @@ export function ProductCard({ product }: { product: StoreProduct }) {
   const discount = product.previousPrice
     ? Math.round(((product.previousPrice - product.price) / product.previousPrice) * 100)
     : 0;
+  const lowStock = product.stock > 0 && product.stock <= (product.minStock ?? 3);
 
   return (
     <article className="group overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm ring-1 ring-transparent transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl hover:ring-emerald-100">
@@ -29,6 +30,9 @@ export function ProductCard({ product }: { product: StoreProduct }) {
             ) : null}
             {product.isNew ? (
               <span className="rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white">Nuevo</span>
+            ) : null}
+            {lowStock ? (
+              <span className="rounded-full bg-amber-500 px-3 py-1 text-xs font-bold text-white">Ultimas unidades</span>
             ) : null}
           </div>
           <div className="absolute inset-x-4 bottom-4 translate-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">

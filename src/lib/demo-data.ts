@@ -14,6 +14,7 @@ export type StoreProduct = {
   id: string;
   name: string;
   slug: string;
+  sku?: string | null;
   shortDescription?: string | null;
   description: string;
   price: number;
@@ -24,6 +25,8 @@ export type StoreProduct = {
   featured: boolean;
   onSale: boolean;
   isNew?: boolean;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
   published: boolean;
   active: boolean;
   category: StoreCategory;

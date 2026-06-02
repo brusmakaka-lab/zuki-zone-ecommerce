@@ -65,11 +65,19 @@ export async function createCheckoutOrder(_: unknown, formData: FormData) {
     .filter(Boolean) as { product: (typeof products)[number]; quantity: number; total: number }[];
 
   if (!items.length) return { ok: false, message: "El carrito esta vacio." };
+  const unavailable = items.find((item) => item.quantity > item.product.stock);
+  if (unavailable) {
+    return {
+      ok: false,
+      message: `Solo quedan ${unavailable.product.stock} unidades de ${unavailable.product.name}. Ajusta la cantidad para continuar.`,
+    };
+  }
 
   const total = items.reduce((sum, item) => sum + item.total, 0);
   const settings = await getSettings();
 
-  const order = await getPrisma().order.create({
+  const order = await getPrisma().$transaction(async (tx) => {
+    const created = await tx.order.create({
     data: {
       userId: session?.user?.id,
       status: OrderStatus.CONSULTA_RECIBIDA,
@@ -94,6 +102,15 @@ export async function createCheckoutOrder(_: unknown, formData: FormData) {
         create: { status: OrderStatus.CONSULTA_RECIBIDA, note: "Pedido generado desde checkout." },
       },
     },
+  });
+    for (const item of items) {
+      await tx.product.update({
+        where: { id: item.product.id },
+        data: { stock: { decrement: item.quantity } },
+      });
+    }
+    await tx.analyticsEvent.create({ data: { type: "ORDER_CREATED", metadata: { orderId: created.id, total } } });
+    return created;
   });
 
   const summary = [
