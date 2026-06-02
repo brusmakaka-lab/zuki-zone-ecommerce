@@ -13,7 +13,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
     <div className="mx-auto grid min-h-[70vh] max-w-md place-items-center px-4 py-12">
       <div className="w-full rounded-lg border border-stone-200 bg-white p-8 shadow-sm">
         <h1 className="text-3xl font-black text-stone-950">Ingresar</h1>
-        <p className="mt-3 text-stone-600">Usa tu cuenta de Google para comprar, guardar datos y seguir pedidos.</p>
+        <p className="mt-3 text-stone-600">Podes ingresar con tu cuenta o continuar como invitado para confirmar tu pedido.</p>
         {googleConfigured ? (
           <form
             className="mt-8"
@@ -25,8 +25,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
             <button className="h-12 w-full rounded-md bg-stone-950 font-bold text-white">Continuar con Google</button>
           </form>
         ) : (
-          <p className="mt-8 rounded-md bg-amber-50 p-3 text-sm font-bold text-amber-800">
-            Login con Google no configurado.
+          <p className="mt-8 rounded-md bg-emerald-50 p-3 text-sm font-bold text-emerald-800">
+            Tambien podes comprar sin crear cuenta.
           </p>
         )}
         <a href="/checkout" className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-md border border-stone-300 font-bold">

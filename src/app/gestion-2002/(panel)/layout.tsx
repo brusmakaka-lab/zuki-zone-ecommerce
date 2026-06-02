@@ -52,7 +52,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-stone-200 bg-white px-4 py-3 text-sm shadow-sm">
             <div>
               <p className="font-black text-stone-950">Gestion del comercio</p>
-              <p className="text-xs text-stone-500">Cambios de productos, contenido y pedidos quedan guardados en Neon.</p>
+              <p className="text-xs text-stone-500">Los cambios de productos, contenido y pedidos quedan guardados para la tienda.</p>
             </div>
             <div className="flex gap-2">
               <Link href="/gestion-2002/productos" className="rounded-md bg-emerald-700 px-3 py-2 font-bold text-white">

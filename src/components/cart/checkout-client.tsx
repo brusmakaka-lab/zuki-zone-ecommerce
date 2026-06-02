@@ -14,6 +14,7 @@ export function CheckoutClient({ userEmail, userName }: { userEmail: string; use
     return (
       <div className="mx-auto max-w-3xl px-4 py-10 text-center">
         <h1 className="text-3xl font-black">Tu carrito esta vacio.</h1>
+        <p className="mt-3 text-stone-600">Elegí productos del catálogo y volvé para coordinar tu compra por WhatsApp.</p>
         <Link href="/catalogo" className="mt-5 inline-flex rounded-md bg-emerald-700 px-5 py-3 font-bold text-white">
           Elegir productos
         </Link>
@@ -25,7 +26,7 @@ export function CheckoutClient({ userEmail, userName }: { userEmail: string; use
     <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_380px] lg:px-8">
       <section>
         <h1 className="text-4xl font-black text-stone-950">Checkout</h1>
-        <p className="mt-2 text-stone-600">El pedido se guarda y se envia la consulta por WhatsApp al comercio.</p>
+        <p className="mt-2 text-stone-600">Confirmamos tu pedido por WhatsApp para coordinar pago, retiro o envio.</p>
         <form action={action} className="mt-8 grid gap-4 rounded-lg border border-stone-200 bg-white p-5">
           <input type="hidden" name="items" value={JSON.stringify(items.map((item) => ({ productId: item.productId, quantity: item.quantity })))} />
           <label className="grid gap-2 text-sm font-semibold">
@@ -64,7 +65,7 @@ export function CheckoutClient({ userEmail, userName }: { userEmail: string; use
           <button disabled={pending} className="h-12 rounded-md bg-emerald-700 font-bold text-white disabled:bg-stone-300">
             {pending ? "Generando pedido..." : "Generar pedido y abrir WhatsApp"}
           </button>
-          <p className="text-sm text-stone-500">Mercado Pago queda preparado para activarse con token real. Mientras tanto, el flujo usa consulta / pago a coordinar.</p>
+          <p className="text-sm text-stone-500">No se cobra online en este paso. Te contactamos para confirmar disponibilidad, medio de pago y entrega.</p>
         </form>
       </section>
       <aside className="h-fit rounded-lg border border-stone-200 bg-white p-5">

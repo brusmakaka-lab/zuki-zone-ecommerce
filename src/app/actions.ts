@@ -46,7 +46,7 @@ export async function saveProfile(formData: FormData) {
 
 export async function createCheckoutOrder(_: unknown, formData: FormData) {
   const session = await auth();
-  if (!hasDatabase()) return { ok: false, message: "Configura DATABASE_URL para generar pedidos reales." };
+  if (!hasDatabase()) return { ok: false, message: "La tienda no puede confirmar pedidos en este momento. Escribinos por WhatsApp y te ayudamos." };
 
   const parsed = checkoutSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { ok: false, message: "No pudimos validar el checkout." };

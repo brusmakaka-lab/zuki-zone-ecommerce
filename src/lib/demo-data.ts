@@ -141,9 +141,9 @@ export const demoCategories: StoreCategory[] = [
     imageUrl: "/zuki-category-deco.svg",
   },
   {
-    id: "cat-textil",
-    name: "Textil",
-    slug: "textil",
+    id: "cat-textiles",
+    name: "Textiles",
+    slug: "textiles",
     description: "Mantas, almohadones, manteles y fibras para el hogar.",
     imageUrl: "/zuki-category-textil.svg",
   },
@@ -225,7 +225,7 @@ export const demoProducts: StoreProduct[] = [
     onSale: true,
     published: true,
     active: true,
-    category: categoryBySlug.get("textil")!,
+    category: categoryBySlug.get("textiles")!,
     images: [{ id: "img-nube", url: "/product-manta-nube-tejida.svg", alt: "Manta Nube tejida" }],
   },
   {

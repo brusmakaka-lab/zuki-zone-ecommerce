@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json(
-      { error: "Vercel Blob no esta configurado. Agrega BLOB_READ_WRITE_TOKEN en Vercel." },
+      { error: "La carga de imagenes no esta activa. Revisa la configuracion de almacenamiento antes de subir archivos." },
       { status: 503 },
     );
   }

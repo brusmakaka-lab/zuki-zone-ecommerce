@@ -39,8 +39,11 @@ export async function SiteHeader({ settings, categories }: { settings: StoreSett
           <Link href="/catalogo" className="hover:text-emerald-800">
             Catalogo
           </Link>
-          <Link href="/catalogo?oferta=1" className="hover:text-emerald-800">
+          <Link href="/ofertas" className="hover:text-emerald-800">
             Ofertas
+          </Link>
+          <Link href="/contacto" className="hover:text-emerald-800">
+            Contacto
           </Link>
           <Link href="/mis-pedidos" className="hover:text-emerald-800">
             Mis pedidos

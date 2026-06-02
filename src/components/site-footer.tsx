@@ -19,7 +19,7 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
         <div>
           <p className="font-semibold">Nosotros</p>
           <div className="mt-4 grid gap-2 text-sm text-stone-300">
-            <Link href="/">Quienes somos</Link>
+            <Link href="/nosotros">Quienes somos</Link>
             <Link href="/catalogo">Productos</Link>
             <Link href="/mis-pedidos">Seguimiento</Link>
           </div>
@@ -27,7 +27,7 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
         <div>
           <p className="font-semibold">Compras</p>
           <div className="mt-4 grid gap-2 text-sm text-stone-300">
-            <Link href="/catalogo?oferta=1">Ofertas</Link>
+            <Link href="/ofertas">Ofertas</Link>
             <Link href="/checkout">Checkout</Link>
             <Link href="/mi-cuenta">Mi cuenta</Link>
           </div>
@@ -38,6 +38,9 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
             <a className="inline-flex items-center gap-2" href={whatsappUrl(settings.whatsappNumber, "Hola, quiero consultar por productos.")}>
               <MessageCircle className="h-4 w-4" /> WhatsApp
             </a>
+            <Link className="inline-flex items-center gap-2" href="/contacto">
+              <MapPin className="h-4 w-4" /> Contacto
+            </Link>
             <a className="inline-flex items-center gap-2" href={`mailto:${settings.email}`}>
               <Mail className="h-4 w-4" /> {settings.email}
             </a>

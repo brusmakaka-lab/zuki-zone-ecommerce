@@ -202,7 +202,7 @@ function AdminEmpty({ title }: { title: string }) {
   return (
     <div className="rounded-lg border border-amber-200 bg-amber-50 p-6">
       <h1 className="text-2xl font-black">{title}</h1>
-      <p className="mt-2 text-sm">Configura DATABASE_URL y ejecuta las migraciones para usar el panel.</p>
+      <p className="mt-2 text-sm">El panel necesita la base de datos conectada para mostrar metricas y actividad.</p>
     </div>
   );
 }

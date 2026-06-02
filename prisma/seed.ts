@@ -42,7 +42,7 @@ async function main() {
     ["Mesa", "mesa", "Vajilla, vasos, fuentes y accesorios para servir."],
     ["Baño", "bano", "Organizacion, textiles y accesorios para renovar el bano."],
     ["Deco", "deco", "Detalles calidos para transformar ambientes."],
-    ["Textil", "textil", "Mantas, almohadones, manteles y fibras para el hogar."],
+    ["Textiles", "textiles", "Mantas, almohadones, manteles y fibras para el hogar."],
     ["Organización", "organizacion", "Canastos, cajas y recursos para ordenar mejor."],
     ["Aire libre", "aire-libre", "Productos para salidas, camping y balcones."],
     ["Festividades", "festividades", "Temporadas, celebraciones y decoracion especial."],
@@ -78,8 +78,8 @@ async function main() {
     ["Laundry", "laundry", "bano"],
     ["Aromas", "aromas", "deco"],
     ["Objetos deco", "objetos-deco", "deco"],
-    ["Almohadones", "almohadones", "textil"],
-    ["Manteles", "manteles", "textil"],
+    ["Almohadones", "almohadones", "textiles"],
+    ["Manteles", "manteles", "textiles"],
     ["Canastos", "canastos", "organizacion"],
     ["Cajas", "cajas", "organizacion"],
     ["Camping", "camping", "aire-libre"],
@@ -130,7 +130,7 @@ async function main() {
     {
       name: "Manta Nube tejida",
       slug: "manta-nube-tejida",
-      category: "textil",
+      category: "textiles",
       description:
         "Manta suave de trama abierta, liviana y abrigada. Pensada para sofa, cama o espacios de descanso.",
       price: 53800,

@@ -46,5 +46,5 @@ export default async function AdminCategoriesPage() {
 }
 
 function AdminNotice({ title }: { title: string }) {
-  return <div className="rounded-lg border border-amber-200 bg-amber-50 p-6"><h1 className="text-2xl font-black">{title}</h1><p className="mt-2 text-sm">Configura DATABASE_URL para administrar.</p></div>;
+  return <div className="rounded-lg border border-amber-200 bg-amber-50 p-6"><h1 className="text-2xl font-black">{title}</h1><p className="mt-2 text-sm">El panel necesita la base de datos conectada para administrar esta seccion.</p></div>;
 }

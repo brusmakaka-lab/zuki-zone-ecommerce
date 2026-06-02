@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
-import { CartProvider } from "@/components/cart/cart-provider";
-import { AddToCartModal } from "@/components/cart/add-to-cart-modal";
-import { CartDrawer } from "@/components/cart/cart-drawer";
+import { PublicChrome } from "@/components/public-chrome";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getCategories, getSettings } from "@/lib/data";
-import { WhatsAppFloat } from "@/components/whatsapp-float";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -63,14 +60,13 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans" style={themeStyle}>
-        <CartProvider>
-          <SiteHeader settings={settings} categories={categories} />
-          <main className="flex-1">{children}</main>
-          <SiteFooter settings={settings} />
-          <CartDrawer />
-          <AddToCartModal />
-          <WhatsAppFloat phone={settings.whatsappNumber} />
-        </CartProvider>
+        <PublicChrome
+          header={<SiteHeader settings={settings} categories={categories} />}
+          footer={<SiteFooter settings={settings} />}
+          whatsappNumber={settings.whatsappNumber}
+        >
+          {children}
+        </PublicChrome>
       </body>
     </html>
   );
