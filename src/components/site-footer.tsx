@@ -8,26 +8,26 @@ import { whatsappUrl } from "@/lib/utils";
 export function SiteFooter({ settings }: { settings: StoreSettings }) {
   return (
     <footer className="border-t border-stone-200 bg-stone-950 text-stone-100">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-5 lg:px-8">
-        <div>
+      <div className="mx-auto grid max-w-7xl gap-7 px-4 py-9 sm:px-6 md:grid-cols-5 md:py-12 lg:px-8">
+        <div className="md:pr-4">
           {settings.logoUrl ? (
             <Image src={settings.logoUrl} alt={settings.storeName} width={240} height={64} className="h-14 w-auto object-contain" unoptimized={settings.logoUrl.endsWith(".svg")} />
           ) : (
             <p className="text-xl font-black">{settings.storeName}</p>
           )}
-          <p className="mt-3 text-sm leading-6 text-stone-300">{settings.aboutText ?? settings.tagline}</p>
+          <p className="mt-3 max-w-sm text-sm leading-6 text-stone-300">{settings.aboutText ?? settings.tagline}</p>
         </div>
         <div>
-          <p className="font-semibold">Nosotros</p>
-          <div className="mt-4 grid gap-2 text-sm text-stone-300">
+          <p className="font-black">Nosotros</p>
+          <div className="mt-3 grid gap-2 text-sm text-stone-300">
             <Link href="/nosotros">Quienes somos</Link>
             <Link href="/catalogo">Productos</Link>
             <Link href="/mis-pedidos">Seguimiento</Link>
           </div>
         </div>
         <div>
-          <p className="font-semibold">Compras</p>
-          <div className="mt-4 grid gap-2 text-sm text-stone-300">
+          <p className="font-black">Compras</p>
+          <div className="mt-3 grid gap-2 text-sm text-stone-300">
             <Link href="/ofertas">Ofertas</Link>
             <Link href="/checkout">Checkout</Link>
             <Link href="/mi-cuenta">Mi cuenta</Link>
@@ -37,8 +37,8 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
           </div>
         </div>
         <div>
-          <p className="font-semibold">Contacto</p>
-          <div className="mt-4 grid gap-3 text-sm text-stone-300">
+          <p className="font-black">Contacto</p>
+          <div className="mt-3 grid gap-2.5 text-sm text-stone-300">
             <a className="inline-flex items-center gap-2" href={whatsappUrl(settings.whatsappNumber, "Hola, quiero consultar por productos.")}>
               <WhatsAppIcon size={18} className="h-4 w-4" /> WhatsApp
             </a>
@@ -64,11 +64,11 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
           </div>
         </div>
         <div>
-          <p className="font-semibold">Newsletter</p>
-          <p className="mt-4 text-sm leading-6 text-stone-300">{settings.newsletterText ?? "Recibi novedades y ofertas."}</p>
-          <form className="mt-4 grid gap-2">
-            <input type="email" placeholder="Email" className="h-10 rounded-md border border-white/10 bg-white px-3 text-sm text-stone-950" />
-            <button className="h-10 rounded-md bg-violet-700 text-sm font-black text-white">Suscribirme</button>
+          <p className="font-black">Newsletter</p>
+          <p className="mt-3 text-sm leading-6 text-stone-300">{settings.newsletterText ?? "Recibi novedades y ofertas."}</p>
+          <form className="mt-3 grid gap-2">
+            <input type="email" placeholder="Email" className="h-11 rounded-md border border-white/10 bg-white px-3 text-sm text-stone-950" />
+            <button className="h-11 rounded-md bg-emerald-700 text-sm font-black text-white">Suscribirme</button>
           </form>
         </div>
       </div>

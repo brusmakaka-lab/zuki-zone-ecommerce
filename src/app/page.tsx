@@ -114,21 +114,24 @@ export default async function Home() {
       </ScrollReveal>
 
       <ScrollReveal className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <ProductCarousel title="Destacados" products={featured} />
+        {featured.length ? <ProductCarousel title="Destacados" products={featured} /> : null}
       </ScrollReveal>
 
-      <ScrollReveal className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <ProductCarousel
-          title="Ofertas"
-          products={offers}
-          action={
-            <Link href="/ofertas" className="hidden rounded-md bg-orange-500 px-4 py-2 text-sm font-black text-white sm:inline-flex">
-              Ver mas
-            </Link>
-          }
-        />
-      </ScrollReveal>
+      {offers.length ? (
+        <ScrollReveal className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <ProductCarousel
+            title="Ofertas"
+            products={offers}
+            action={
+              <Link href="/ofertas" className="hidden rounded-md bg-orange-500 px-4 py-2 text-sm font-black text-white sm:inline-flex">
+                Ver mas
+              </Link>
+            }
+          />
+        </ScrollReveal>
+      ) : null}
 
+      {ideas.length ? (
       <ScrollReveal className="bg-white">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
           <div className="mb-7 flex items-end justify-between gap-4">
@@ -155,13 +158,14 @@ export default async function Home() {
           </div>
         </div>
       </ScrollReveal>
+      ) : null}
 
-      <section className="bg-violet-950 text-white">
-        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_420px] lg:px-8">
+      <section className="bg-stone-950 text-white">
+        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_420px] lg:px-8">
           <div>
-            <p className="text-sm font-black uppercase tracking-wider text-violet-200">Newsletter</p>
-            <h2 className="mt-2 text-3xl font-black">{settings.newsletterTitle ?? "Recibi novedades de Zuki Zone"}</h2>
-            <p className="mt-3 text-violet-100">{settings.newsletterText ?? settings.tagline}</p>
+            <p className="text-sm font-black uppercase tracking-wider text-emerald-300">Newsletter</p>
+            <h2 className="mt-2 text-2xl font-black sm:text-3xl">{settings.newsletterTitle ?? "Recibi novedades de Zuki Zone"}</h2>
+            <p className="mt-3 text-sm leading-6 text-stone-300 sm:text-base">{settings.newsletterText ?? settings.tagline}</p>
           </div>
           <form className="flex flex-col gap-3 sm:flex-row lg:self-end">
             <input type="email" placeholder="tu@email.com" className="h-12 flex-1 rounded-md border border-white/20 bg-white px-4 text-stone-950 outline-none" />
