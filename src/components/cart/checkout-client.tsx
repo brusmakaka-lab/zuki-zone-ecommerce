@@ -2,25 +2,74 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { CreditCard, ShieldCheck, Truck } from "lucide-react";
+import { ArrowRight, CreditCard, ShieldCheck, ShoppingBag, Truck } from "lucide-react";
 import { createCheckoutOrder } from "@/app/actions";
 import { CheckoutStartedTracker } from "@/components/analytics-trackers";
 import { useCart } from "@/components/cart/cart-provider";
+import { ProductCard } from "@/components/product-card";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
+import type { StoreCategory, StoreProduct } from "@/lib/demo-data";
 import { formatMoney } from "@/lib/utils";
 
-export function CheckoutClient({ userEmail, userName }: { userEmail: string; userName: string }) {
+export function CheckoutClient({
+  userEmail,
+  userName,
+  recommended,
+  categories,
+}: {
+  userEmail: string;
+  userName: string;
+  recommended: StoreProduct[];
+  categories: StoreCategory[];
+}) {
   const { items, total } = useCart();
   const [state, action, pending] = useActionState(createCheckoutOrder, null);
 
   if (!items.length) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10 text-center">
-        <h1 className="text-3xl font-black">Tu carrito esta vacio.</h1>
-        <p className="mt-3 text-stone-600">Elegí productos del catálogo y volvé para coordinar tu compra por WhatsApp.</p>
-        <Link href="/catalogo" className="mt-5 inline-flex rounded-md bg-emerald-700 px-5 py-3 font-bold text-white">
-          Elegir productos
-        </Link>
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+        <section className="rounded-lg border border-stone-200 bg-white p-7 text-center shadow-sm sm:p-10">
+          <ShoppingBag className="mx-auto h-11 w-11 text-emerald-700" />
+          <h1 className="mt-4 text-3xl font-black text-stone-950">Tu carrito esta vacio.</h1>
+          <p className="mx-auto mt-3 max-w-xl leading-7 text-stone-600">
+            Elegi productos del catalogo y volve para coordinar tu compra por WhatsApp con seguimiento del pedido.
+          </p>
+          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/catalogo" className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-emerald-700 px-5 font-bold text-white transition hover:bg-emerald-800">
+              Elegir productos
+              <ArrowRight size={18} />
+            </Link>
+            <Link href="/ofertas" className="inline-flex h-12 items-center justify-center rounded-md border border-stone-300 px-5 font-bold text-stone-900 transition hover:border-emerald-300 hover:bg-emerald-50">
+              Ver ofertas
+            </Link>
+          </div>
+        </section>
+        {categories.length ? (
+          <section className="mt-8">
+            <h2 className="text-xl font-black text-stone-950">Comprar por categoria</h2>
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {categories.map((category) => (
+                <Link
+                  key={category.id}
+                  href={`/catalogo?categoria=${category.slug}`}
+                  className="rounded-lg border border-stone-200 bg-white px-4 py-4 text-center text-sm font-black text-stone-800 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50"
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+        {recommended.length ? (
+          <section className="mt-8">
+            <h2 className="text-xl font-black text-stone-950">Recomendados para empezar</h2>
+            <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {recommended.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
     );
   }
@@ -31,7 +80,7 @@ export function CheckoutClient({ userEmail, userName }: { userEmail: string; use
       <section>
         <h1 className="text-4xl font-black text-stone-950">Checkout</h1>
         <p className="mt-2 text-stone-600">Confirmamos tu pedido por WhatsApp para coordinar pago, retiro o envio.</p>
-        <form action={action} className="mt-8 grid gap-4 rounded-lg border border-stone-200 bg-white p-5">
+        <form action={action} className="mt-8 grid gap-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
           <input type="hidden" name="items" value={JSON.stringify(items.map((item) => ({ productId: item.productId, quantity: item.quantity })))} />
           <label className="grid gap-2 text-sm font-semibold">
             Nombre completo
@@ -72,7 +121,7 @@ export function CheckoutClient({ userEmail, userName }: { userEmail: string; use
           <p className="text-sm text-stone-500">No se cobra online en este paso. Te contactamos para confirmar disponibilidad, medio de pago y entrega.</p>
         </form>
       </section>
-      <aside className="h-fit rounded-lg border border-stone-200 bg-white p-5">
+      <aside className="order-first h-fit rounded-lg border border-stone-200 bg-white p-5 shadow-sm lg:order-none">
         <h2 className="text-xl font-black">Resumen</h2>
         <div className="mt-4 grid gap-3">
           {items.map((item) => (

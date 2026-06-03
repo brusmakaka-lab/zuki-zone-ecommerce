@@ -18,9 +18,9 @@ export function ProductCard({ product }: { product: StoreProduct }) {
   ].filter(Boolean).slice(0, 2) as { label: string; className: string }[];
 
   return (
-    <article className="group overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm ring-1 ring-transparent transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl hover:ring-emerald-100">
-      <Link href={`/producto/${product.slug}`} className="block">
-        <div className="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(circle_at_20%_15%,#fef3c7,transparent_28%),linear-gradient(135deg,#f8fafc,#e0f2fe_48%,#dcfce7)]">
+    <article className="group grid grid-cols-[128px_1fr] overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm ring-1 ring-transparent transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl hover:ring-emerald-100 sm:block">
+      <Link href={`/producto/${product.slug}`} className="block h-full sm:h-auto">
+        <div className="relative h-full min-h-40 overflow-hidden bg-[radial-gradient(circle_at_20%_15%,#fef3c7,transparent_28%),linear-gradient(135deg,#f8fafc,#e0f2fe_48%,#dcfce7)] sm:aspect-[4/3] sm:h-auto sm:min-h-0">
           {image ? (
             <Image
               src={image.url}
@@ -48,13 +48,13 @@ export function ProductCard({ product }: { product: StoreProduct }) {
           </div>
         </div>
       </Link>
-      <div className="space-y-4 p-4">
+      <div className="flex min-w-0 flex-col justify-between gap-3 p-3 sm:block sm:space-y-4 sm:p-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">{product.category.name}</p>
-          <Link href={`/producto/${product.slug}`} className="mt-1 block text-lg font-semibold text-stone-950">
+          <Link href={`/producto/${product.slug}`} className="mt-1 line-clamp-2 block text-base font-black leading-tight text-stone-950 sm:text-lg sm:font-semibold">
             {product.name}
           </Link>
-          {product.shortDescription ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-stone-500">{product.shortDescription}</p> : null}
+          {product.shortDescription ? <p className="mt-2 hidden line-clamp-2 text-sm leading-6 text-stone-500 sm:block">{product.shortDescription}</p> : null}
         </div>
         <div className="flex items-end justify-between gap-3">
           <div>
@@ -65,6 +65,7 @@ export function ProductCard({ product }: { product: StoreProduct }) {
           </div>
           <AddToCartButton product={product} className="hidden sm:inline-flex" />
         </div>
+        <AddToCartButton product={product} className="h-10 w-full sm:hidden" />
       </div>
     </article>
   );

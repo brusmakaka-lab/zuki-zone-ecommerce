@@ -19,7 +19,7 @@ export function CartPageClient({ recommended, categories }: { recommended: Store
           <section className="rounded-lg border border-stone-200 bg-white p-8 text-center shadow-sm">
             <ShoppingBag className="mx-auto h-11 w-11 text-emerald-700" />
             <h2 className="mt-4 text-2xl font-black text-stone-950">Tu carrito esta vacio</h2>
-            <p className="mx-auto mt-2 max-w-xl text-stone-600">Elegí productos del catálogo y volvé para coordinar tu compra por WhatsApp con seguimiento del pedido.</p>
+            <p className="mx-auto mt-2 max-w-xl text-stone-600">Elegi productos del catalogo y volve para coordinar tu compra por WhatsApp con seguimiento del pedido.</p>
             <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
               <Link href="/catalogo" className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-emerald-700 px-5 font-bold text-white">
                 Seguir comprando

@@ -91,7 +91,7 @@ export default async function Home() {
           {categories.slice(0, 6).map((category, index) => (
             <Link key={category.id} href={`/catalogo?categoria=${category.slug}`} className={`group relative overflow-hidden rounded-xl bg-stone-900 ${index === 0 ? "lg:col-span-2" : ""}`}>
               <div className="relative aspect-[5/3]">
-                <Image src={category.imageUrl ?? "/product-fallback.svg"} alt={category.name} fill className="object-cover opacity-85 transition duration-500 group-hover:scale-105" />
+                <Image src={category.imageUrl ?? "/product-fallback.svg"} alt={category.name} fill sizes={index === 0 ? "(min-width: 1024px) 66vw, 100vw" : "(min-width: 1024px) 33vw, 100vw"} className="object-cover opacity-85 transition duration-500 group-hover:scale-105" />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 to-transparent" />
               <div className="absolute bottom-0 p-5 text-white">

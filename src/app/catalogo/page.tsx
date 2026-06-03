@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ProductCard } from "@/components/product-card";
 import { getCategories, getProducts } from "@/lib/data";
 
@@ -26,13 +27,13 @@ export default async function CatalogPage({ searchParams }: { searchParams: Sear
   ]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-sm font-bold uppercase tracking-wider text-emerald-700">Catalogo</p>
-          <h1 className="mt-2 text-4xl font-black text-stone-950">Productos disponibles</h1>
+          <h1 className="mt-2 text-3xl font-black leading-tight text-stone-950 sm:text-4xl">Productos disponibles</h1>
         </div>
-        <form className="grid gap-3 rounded-lg border border-stone-200 bg-white p-3 md:grid-cols-5">
+        <form className="grid gap-3 rounded-lg border border-stone-200 bg-white p-3 shadow-sm md:grid-cols-5">
           <input name="q" defaultValue={params.q} placeholder="Buscar" className="h-10 rounded-md border border-stone-200 px-3 text-sm outline-emerald-700" />
           <select name="categoria" defaultValue={params.categoria ?? ""} className="h-10 rounded-md border border-stone-200 px-3 text-sm">
             <option value="">Todas</option>
@@ -56,6 +57,21 @@ export default async function CatalogPage({ searchParams }: { searchParams: Sear
           </Link>
         </form>
       </div>
+      {categories.length ? (
+        <div className="mb-8 flex snap-x gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {categories.slice(0, 8).map((category) => (
+            <Link key={category.id} href={`/catalogo?categoria=${category.slug}`} className="group relative h-24 w-44 flex-none snap-start overflow-hidden rounded-lg bg-stone-900 text-white shadow-sm">
+              {category.imageUrl ? (
+                <Image src={category.imageUrl} alt={category.name} fill sizes="176px" className="object-cover opacity-75 transition duration-500 group-hover:scale-105" unoptimized={category.imageUrl.endsWith(".svg") || category.imageUrl.endsWith(".ico")} />
+              ) : (
+                <div className="h-full bg-[radial-gradient(circle_at_20%_15%,#fef3c7,transparent_28%),linear-gradient(135deg,#f8fafc,#e0f2fe_48%,#dcfce7)]" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-stone-950/85 to-stone-950/10" />
+              <span className="absolute bottom-3 left-3 right-3 text-sm font-black leading-tight">{category.name}</span>
+            </Link>
+          ))}
+        </div>
+      ) : null}
       {products.length ? (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {products.map((product) => (
