@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Camera, Mail, MapPin, MessageCircle, Share2 } from "lucide-react";
+import { Camera, Mail, MapPin, Share2 } from "lucide-react";
 import type { StoreSettings } from "@/lib/demo-data";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { whatsappUrl } from "@/lib/utils";
 
 export function SiteFooter({ settings }: { settings: StoreSettings }) {
@@ -39,7 +40,7 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
           <p className="font-semibold">Contacto</p>
           <div className="mt-4 grid gap-3 text-sm text-stone-300">
             <a className="inline-flex items-center gap-2" href={whatsappUrl(settings.whatsappNumber, "Hola, quiero consultar por productos.")}>
-              <MessageCircle className="h-4 w-4" /> WhatsApp
+              <WhatsAppIcon size={18} className="h-4 w-4" /> WhatsApp
             </a>
             <Link className="inline-flex items-center gap-2" href="/contacto">
               <MapPin className="h-4 w-4" /> Contacto

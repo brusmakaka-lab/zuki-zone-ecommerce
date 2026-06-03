@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CreditCard, HelpCircle, MessageCircle, PackageCheck, RotateCcw, ShieldCheck, Truck } from "lucide-react";
+import { CreditCard, HelpCircle, PackageCheck, RotateCcw, ShieldCheck, Truck } from "lucide-react";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { ProductViewTracker, TrackedWhatsAppLink } from "@/components/analytics-trackers";
 import { ProductCard } from "@/components/product-card";
 import { ProductGallery } from "@/components/product-gallery";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { getProductBySlug, getProducts, getSettings } from "@/lib/data";
 import { formatMoney, whatsappUrl } from "@/lib/utils";
 
@@ -101,7 +102,7 @@ export default async function ProductDetailPage({ params }: { params: Params }) 
                 Comprar ahora
               </Link>
               <TrackedWhatsAppLink href={whatsappUrl(settings.whatsappNumber, productMessage)} productId={product.id} className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-emerald-600 px-6 font-bold text-emerald-700">
-                <MessageCircle size={18} />
+                <WhatsAppIcon size={20} className="h-5 w-5" />
                 Consultar
               </TrackedWhatsAppLink>
             </div>
@@ -122,7 +123,7 @@ export default async function ProductDetailPage({ params }: { params: Params }) 
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <MiniBenefit icon={<PackageCheck size={18} />} title="Listo para usar" />
             <MiniBenefit icon={<ShieldCheck size={18} />} title="Seleccionado por Zuki" />
-            <MiniBenefit icon={<MessageCircle size={18} />} title="Asesoria por WhatsApp" />
+            <MiniBenefit icon={<WhatsAppIcon size={20} className="h-5 w-5" />} title="Asesoria por WhatsApp" />
           </div>
         </div>
         <div className="rounded-lg border border-stone-200 bg-white p-6 shadow-sm">

@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Download, MessageCircle, Search } from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { OrderStatus } from "@prisma/client";
 import { updateOrderStatus } from "@/app/gestion-2002/actions";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { getPrisma, hasDatabase } from "@/lib/prisma";
 import { orderStatusLabels } from "@/lib/order-status";
 import { cn, formatMoney, whatsappUrl } from "@/lib/utils";
@@ -112,7 +113,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                     <div className="mt-4 flex flex-wrap items-center gap-3">
                       <p className="text-lg font-black">{formatMoney(Number(order.total))}</p>
                       <a className="inline-flex h-10 items-center gap-2 rounded-md border border-emerald-700 px-4 text-sm font-bold text-emerald-800" href={whatsappUrl(order.customerPhone, message)}>
-                        <MessageCircle size={17} />
+                        <WhatsAppIcon size={19} className="h-[19px] w-[19px]" />
                         WhatsApp
                       </a>
                     </div>

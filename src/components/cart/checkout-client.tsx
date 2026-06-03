@@ -2,10 +2,11 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { CreditCard, MessageCircle, ShieldCheck, Truck } from "lucide-react";
+import { CreditCard, ShieldCheck, Truck } from "lucide-react";
 import { createCheckoutOrder } from "@/app/actions";
 import { CheckoutStartedTracker } from "@/components/analytics-trackers";
 import { useCart } from "@/components/cart/cart-provider";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { formatMoney } from "@/lib/utils";
 
 export function CheckoutClient({ userEmail, userName }: { userEmail: string; userName: string }) {
@@ -86,7 +87,7 @@ export function CheckoutClient({ userEmail, userName }: { userEmail: string; use
           <span>{formatMoney(total)}</span>
         </div>
         <div className="mt-5 grid gap-3 border-t border-stone-100 pt-5 text-sm">
-          <Trust icon={<MessageCircle size={16} />} text="Confirmacion directa por WhatsApp" />
+          <Trust icon={<WhatsAppIcon size={18} className="h-[18px] w-[18px]" />} text="Confirmacion directa por WhatsApp" />
           <Trust icon={<Truck size={16} />} text="Envio o retiro coordinado" />
           <Trust icon={<CreditCard size={16} />} text="Pago a coordinar antes de preparar" />
           <Trust icon={<ShieldCheck size={16} />} text="Pedido registrado con seguimiento" />

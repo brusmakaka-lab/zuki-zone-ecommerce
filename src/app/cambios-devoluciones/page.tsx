@@ -1,4 +1,5 @@
-import { MessageCircle, RotateCcw, ShieldCheck } from "lucide-react";
+import { RotateCcw, ShieldCheck } from "lucide-react";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 
 export default function ReturnsPage() {
   return (
@@ -7,7 +8,7 @@ export default function ReturnsPage() {
       <h1 className="mt-2 text-4xl font-black text-stone-950">Compra con acompañamiento</h1>
       <p className="mt-4 text-lg leading-8 text-stone-600">Si el producto no coincide con lo acordado o necesitás revisar una compra, escribinos por WhatsApp con el número de pedido.</p>
       <section className="mt-8 grid gap-4 md:grid-cols-3">
-        <Card icon={<MessageCircle size={22} />} title="Contacto directo" text="Resolvemos cada caso por WhatsApp para mantener trazabilidad." />
+        <Card icon={<WhatsAppIcon size={24} className="h-6 w-6" />} title="Contacto directo" text="Resolvemos cada caso por WhatsApp para mantener trazabilidad." />
         <Card icon={<RotateCcw size={22} />} title="Cambios coordinados" text="Evaluamos estado del producto, stock disponible y logística." />
         <Card icon={<ShieldCheck size={22} />} title="Pedido registrado" text="Cada compra queda guardada con datos y seguimiento." />
       </section>

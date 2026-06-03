@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { MessageCircle, ShieldCheck, Store, Truck } from "lucide-react";
+import { ShieldCheck, Store, Truck } from "lucide-react";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { getSettings } from "@/lib/data";
 import { whatsappUrl } from "@/lib/utils";
 
@@ -16,7 +17,7 @@ export default async function AboutPage() {
           <div className="mt-7 flex flex-wrap gap-3">
             <Link href="/catalogo" className="rounded-md bg-emerald-700 px-5 py-3 font-bold text-white">Ver productos</Link>
             <a href={whatsappUrl(settings.whatsappNumber, "Hola, quiero conocer mas sobre Zuki Zone.")} className="inline-flex items-center gap-2 rounded-md border border-stone-300 px-5 py-3 font-bold text-stone-900">
-              <MessageCircle size={18} />
+              <WhatsAppIcon size={20} className="h-5 w-5" />
               Hablar por WhatsApp
             </a>
           </div>

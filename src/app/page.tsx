@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CreditCard, MapPinned, MessageCircle, PackageCheck, ShieldCheck, Store, Truck } from "lucide-react";
+import { ArrowRight, CreditCard, MapPinned, PackageCheck, ShieldCheck, Store, Truck } from "lucide-react";
 import { HeroSlider } from "@/components/hero-slider";
 import { ProductCarousel } from "@/components/product-carousel";
 import { ScrollReveal } from "@/components/scroll-reveal";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { getBenefits, getCategories, getHeroSlides, getIdeas, getProducts, getSettings } from "@/lib/data";
 
 const iconMap = {
@@ -75,7 +76,7 @@ export default async function Home() {
             <span className="font-bold">Pagas al coordinar la compra</span>
           </div>
           <div className="flex items-center gap-3">
-            <MessageCircle className="h-5 w-5 text-emerald-700" />
+            <WhatsAppIcon size={22} className="h-5 w-5" />
             <span className="font-bold">Atencion directa por WhatsApp</span>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CheckCircle2, MessageCircle } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 
 type SearchParams = Promise<{
   pedido?: string;
@@ -24,7 +25,7 @@ export default async function CheckoutSuccessPage({ searchParams }: { searchPara
               href={params.whatsapp}
               className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-emerald-600 font-black text-white"
             >
-              <MessageCircle className="h-5 w-5" />
+              <WhatsAppIcon size={22} className="h-5 w-5" />
               Enviar WhatsApp
             </a>
           ) : null}
