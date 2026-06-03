@@ -127,6 +127,7 @@ model Product {
   isNew          Boolean      @default(false)
   published      Boolean      @default(true)
   active         Boolean      @default(true)
+  archivedAt     DateTime?
   sortOrder      Int          @default(0)
   seoTitle       String?
   seoDescription String?
@@ -143,6 +144,7 @@ model Product {
   @@index([categoryId])
   @@index([subcategoryId])
   @@index([stock])
+  @@index([archivedAt])
   @@index([featured, onSale, published, active])
 }
 

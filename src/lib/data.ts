@@ -137,6 +137,7 @@ export async function getProducts(filters?: {
       where: {
         active: true,
         published: true,
+        archivedAt: null,
         category: filters?.category ? { slug: filters.category } : undefined,
         featured: filters?.featured || undefined,
         onSale: filters?.onSale || undefined,
@@ -166,7 +167,7 @@ export async function getProductBySlug(slug: string) {
 
   try {
     const product = await getPrisma().product.findFirst({
-      where: { slug, active: true, published: true },
+      where: { slug, active: true, published: true, archivedAt: null },
       include: productInclude,
     });
     return product ? normalizeProduct(product) : null;
@@ -182,7 +183,7 @@ export async function getProductsByIds(ids: string[]) {
 
   try {
     const products = await getPrisma().product.findMany({
-      where: { id: { in: ids }, active: true, published: true },
+      where: { id: { in: ids }, active: true, published: true, archivedAt: null },
       include: productInclude,
     });
     return products.map(normalizeProduct);

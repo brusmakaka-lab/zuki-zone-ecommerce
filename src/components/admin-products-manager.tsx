@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useActionState, useMemo, useState, useTransition } from "react";
 import {
   AlertTriangle,
   ArrowUpDown,
@@ -30,9 +30,12 @@ import {
   X,
 } from "lucide-react";
 import {
+  archiveProduct,
   bulkUpdateProducts,
   deleteProduct,
   duplicateProduct,
+  permanentlyDeleteProduct,
+  restoreProduct,
   updateProductQuickAction,
   upsertProduct,
 } from "@/app/gestion-2002/actions";
@@ -62,6 +65,7 @@ type AdminProduct = {
   isNew: boolean;
   published: boolean;
   active: boolean;
+  archivedAt: string | null;
   sortOrder: number;
   seoTitle: string | null;
   seoDescription: string | null;
@@ -82,6 +86,8 @@ const tabs = ["Basico", "Precio y stock", "Categoria", "Imagenes", "Publicacion"
 
 export function AdminProductsManager({ products, categories }: Props) {
   const searchParams = useSearchParams();
+  const okMessage = searchParams.get("ok");
+  const errorMessage = searchParams.get("error");
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [categoryId, setCategoryId] = useState("");
   const [subcategoryId, setSubcategoryId] = useState("");
@@ -101,14 +107,15 @@ export function AdminProductsManager({ products, categories }: Props) {
 
   const metrics = useMemo(
     () => ({
-      total: products.length,
-      published: products.filter((product) => product.published && product.active).length,
-      noStock: products.filter((product) => product.stock <= 0).length,
+      total: products.filter((product) => !product.archivedAt).length,
+      published: products.filter((product) => !product.archivedAt && product.published && product.active).length,
+      noStock: products.filter((product) => !product.archivedAt && product.stock <= 0).length,
       sale: products.filter((product) => product.onSale).length,
       featured: products.filter((product) => product.featured).length,
-      drafts: products.filter((product) => !product.published || !product.active).length,
-      withoutImage: products.filter((product) => !product.images.length).length,
-      lowStock: products.filter((product) => product.stock > 0 && product.stock <= product.minStock).length,
+      drafts: products.filter((product) => !product.archivedAt && (!product.published || !product.active)).length,
+      archived: products.filter((product) => product.archivedAt).length,
+      withoutImage: products.filter((product) => !product.archivedAt && !product.images.length).length,
+      lowStock: products.filter((product) => !product.archivedAt && product.stock > 0 && product.stock <= product.minStock).length,
     }),
     [products],
   );
@@ -128,7 +135,8 @@ export function AdminProductsManager({ products, categories }: Props) {
         const matchesStatus =
           status === "all" ||
           (status === "published" && product.published && product.active) ||
-          (status === "hidden" && (!product.published || !product.active));
+          (status === "hidden" && !product.archivedAt && (!product.published || !product.active)) ||
+          (status === "archived" && Boolean(product.archivedAt));
         const matchesStock =
           stock === "all" ||
           (stock === "available" && product.stock > product.minStock) ||
@@ -139,7 +147,8 @@ export function AdminProductsManager({ products, categories }: Props) {
           (flag === "sale" && product.onSale) ||
           (flag === "featured" && product.featured) ||
           (flag === "new" && product.isNew);
-        return matchesQuery && matchesCategory && matchesSubcategory && matchesStatus && matchesStock && matchesFlag;
+        const matchesArchive = status === "archived" || !product.archivedAt;
+        return matchesArchive && matchesQuery && matchesCategory && matchesSubcategory && matchesStatus && matchesStock && matchesFlag;
       })
       .sort((a, b) => {
         if (sort === "name") return a.name.localeCompare(b.name);
@@ -187,6 +196,9 @@ export function AdminProductsManager({ products, categories }: Props) {
 
   return (
     <div className="grid gap-6">
+      {okMessage ? <AdminNotice type="ok" message={okMessage} /> : null}
+      {errorMessage ? <AdminNotice type="error" message={errorMessage} /> : null}
+
       <header className="flex flex-col gap-4 rounded-lg border border-stone-200 bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-xs font-bold uppercase text-emerald-700">Catalogo</p>
@@ -202,7 +214,7 @@ export function AdminProductsManager({ products, categories }: Props) {
             <Upload size={18} />
             Importar / Exportar
           </button>
-          <button onClick={() => setEditing(emptyProduct(categories[0]?.id ?? ""))} className="inline-flex h-11 items-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-800">
+          <button onClick={() => setEditing(emptyProduct(parents[0]?.id ?? ""))} className="inline-flex h-11 items-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-800">
             <Plus size={18} />
             Nuevo producto
           </button>
@@ -216,6 +228,7 @@ export function AdminProductsManager({ products, categories }: Props) {
         <Metric label="En oferta" value={metrics.sale} icon={<BadgePercent size={18} />} />
         <Metric label="Destacados" value={metrics.featured} icon={<Star size={18} />} />
         <Metric label="Ocultos" value={metrics.drafts} icon={<EyeOff size={18} />} />
+        <Metric label="Archivados" value={metrics.archived} icon={<Trash2 size={18} />} />
       </section>
 
       {(metrics.withoutImage || metrics.noStock || metrics.lowStock) ? (
@@ -244,6 +257,7 @@ export function AdminProductsManager({ products, categories }: Props) {
             <option value="all">Todos los estados</option>
             <option value="published">Publicado</option>
             <option value="hidden">Oculto</option>
+            <option value="archived">Archivados</option>
           </Select>
           <Select value={stock} onChange={setStock}>
             <option value="all">Todo stock</option>
@@ -283,7 +297,7 @@ export function AdminProductsManager({ products, categories }: Props) {
           <ProductCards products={paginated} selected={selected} onToggle={toggleSelected} onEdit={setEditing} />
         )
       ) : (
-        <EmptyProducts onCreate={() => setEditing(emptyProduct(categories[0]?.id ?? ""))} />
+        <EmptyProducts onCreate={() => setEditing(emptyProduct(parents[0]?.id ?? ""))} />
       )}
 
       {filtered.length ? (
@@ -406,8 +420,10 @@ function ProductEditor({ product, categories, onClose }: { product: AdminProduct
   const [name, setName] = useState(product.name);
   const [slug, setSlug] = useState(product.slug);
   const [categoryId, setCategoryId] = useState(product.categoryId);
+  const [subcategoryId, setSubcategoryId] = useState(product.subcategoryId ?? "");
   const [images, setImages] = useState(product.images.map((image) => image.url));
   const [mainImage, setMainImage] = useState(product.images.find((image) => image.isMain)?.url ?? product.images[0]?.url ?? "");
+  const [state, action, pending] = useActionState(upsertProduct, null);
   const parents = categories.filter((category) => !category.parentId);
   const children = categories.filter((category) => category.parentId === categoryId);
 
@@ -428,7 +444,7 @@ function ProductEditor({ product, categories, onClose }: { product: AdminProduct
           </button>
         </div>
 
-        <form action={upsertProduct} className="grid">
+        <form action={action} className="grid">
           <input type="hidden" name="id" value={product.id} />
           <input type="hidden" name="imageUrls" value={images.join("\n")} />
           <input type="hidden" name="mainImageUrl" value={mainImage || images[0] || ""} />
@@ -458,8 +474,8 @@ function ProductEditor({ product, categories, onClose }: { product: AdminProduct
                 <Field label="Descripcion corta">
                   <input name="shortDescription" defaultValue={product.shortDescription ?? ""} maxLength={160} className={inputClass} />
                 </Field>
-                <Field label="Descripcion completa" required>
-                  <textarea name="description" defaultValue={product.description} rows={7} className={textareaClass} />
+                <Field label="Descripcion completa">
+                  <textarea name="description" defaultValue={product.description} rows={7} placeholder="Opcional. Si la dejas vacia usamos la descripcion corta o el nombre." className={textareaClass} />
                 </Field>
             </div>
 
@@ -484,13 +500,13 @@ function ProductEditor({ product, categories, onClose }: { product: AdminProduct
 
             <div className={cn("grid gap-4 md:grid-cols-2", activeTab !== "Categoria" && "hidden")}>
                 <Field label="Categoria" required>
-                  <select name="categoryId" value={categoryId} onChange={(event) => setCategoryId(event.target.value)} className={inputClass}>
+                  <select name="categoryId" value={categoryId} onChange={(event) => { setCategoryId(event.target.value); setSubcategoryId(""); }} className={inputClass}>
                     <option value="">Elegir categoria</option>
                     {parents.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
                   </select>
                 </Field>
                 <Field label="Subcategoria">
-                  <select name="subcategoryId" defaultValue={product.subcategoryId ?? ""} className={inputClass}>
+                  <select name="subcategoryId" value={subcategoryId} onChange={(event) => setSubcategoryId(event.target.value)} className={inputClass}>
                     <option value="">Sin subcategoria</option>
                     {children.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
                   </select>
@@ -531,8 +547,15 @@ function ProductEditor({ product, categories, onClose }: { product: AdminProduct
           </div>
 
           <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-stone-200 bg-white/95 p-4 backdrop-blur sm:flex-row sm:justify-end">
+            {state?.message ? (
+              <p className={cn("mr-auto rounded-md px-3 py-2 text-sm font-bold", state.ok ? "bg-emerald-50 text-emerald-800" : "bg-rose-50 text-rose-800")}>
+                {state.message}
+              </p>
+            ) : null}
             <button type="button" onClick={closeWithCheck} className="h-11 rounded-md border border-stone-300 px-5 font-bold text-stone-800">Cancelar</button>
-            <button className="h-11 rounded-md bg-emerald-700 px-5 font-bold text-white">Guardar producto</button>
+            <button disabled={pending} className="h-11 rounded-md bg-emerald-700 px-5 font-bold text-white disabled:bg-stone-300">
+              {pending ? "Guardando..." : "Guardar producto"}
+            </button>
           </div>
         </form>
       </div>
@@ -629,26 +652,51 @@ function ImageManager({
 }
 
 function ProductActions({ product, onEdit }: { product: AdminProduct; onEdit: () => void }) {
+  const archived = Boolean(product.archivedAt);
   return (
-    <div className="flex justify-end gap-1">
-      <form action={updateProductQuickAction}>
-        <input type="hidden" name="id" value={product.id} />
-        <input type="hidden" name="action" value="published" />
-        <input type="hidden" name="value" value={(!product.published || !product.active).toString()} />
-        <button title={product.published && product.active ? "Ocultar" : "Publicar"} className="grid h-9 w-9 place-items-center rounded-md border border-stone-200 hover:bg-stone-50">
-          {product.published && product.active ? <EyeOff size={16} /> : <Eye size={16} />}
-        </button>
-      </form>
+    <div className="flex flex-wrap justify-end gap-1">
+      {archived ? (
+        <form action={restoreProduct}>
+          <input type="hidden" name="id" value={product.id} />
+          <button title="Restaurar y publicar" className="grid h-9 w-9 place-items-center rounded-md border border-emerald-200 text-emerald-800 hover:bg-emerald-50">
+            <Eye size={16} />
+          </button>
+        </form>
+      ) : (
+        <form action={updateProductQuickAction}>
+          <input type="hidden" name="id" value={product.id} />
+          <input type="hidden" name="action" value="published" />
+          <input type="hidden" name="value" value={(!product.published || !product.active).toString()} />
+          <button title={product.published && product.active ? "Ocultar de la tienda" : "Publicar en tienda"} className="grid h-9 w-9 place-items-center rounded-md border border-stone-200 hover:bg-stone-50">
+            {product.published && product.active ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </form>
+      )}
       <button title="Editar" onClick={onEdit} className="grid h-9 w-9 place-items-center rounded-md border border-stone-200 hover:bg-stone-50"><Edit size={16} /></button>
-      <form action={duplicateProduct}>
-        <input type="hidden" name="id" value={product.id} />
-        <button title="Duplicar" className="grid h-9 w-9 place-items-center rounded-md border border-stone-200 hover:bg-stone-50"><Copy size={16} /></button>
-      </form>
+      {!archived ? (
+        <form action={duplicateProduct}>
+          <input type="hidden" name="id" value={product.id} />
+          <button title="Duplicar" className="grid h-9 w-9 place-items-center rounded-md border border-stone-200 hover:bg-stone-50"><Copy size={16} /></button>
+        </form>
+      ) : null}
       <Link title="Ver producto" target="_blank" href={`/producto/${product.slug}`} className="grid h-9 w-9 place-items-center rounded-md border border-stone-200 hover:bg-stone-50"><Eye size={16} /></Link>
-      <form action={deleteProduct} onSubmit={(event) => !confirm("Seguro que queres ocultar este producto?") && event.preventDefault()}>
-        <input type="hidden" name="id" value={product.id} />
-        <button title="Eliminar" className="grid h-9 w-9 place-items-center rounded-md border border-rose-200 text-rose-700 hover:bg-rose-50"><Trash2 size={16} /></button>
-      </form>
+      {!archived ? (
+        <>
+          <form action={deleteProduct}>
+            <input type="hidden" name="id" value={product.id} />
+            <button title="Ocultar de la tienda" className="grid h-9 w-9 place-items-center rounded-md border border-amber-200 text-amber-800 hover:bg-amber-50"><EyeOff size={16} /></button>
+          </form>
+          <form action={archiveProduct}>
+            <input type="hidden" name="id" value={product.id} />
+            <button title="Archivar" className="grid h-9 w-9 place-items-center rounded-md border border-stone-300 text-stone-700 hover:bg-stone-50"><Trash2 size={16} /></button>
+          </form>
+        </>
+      ) : (
+        <form action={permanentlyDeleteProduct} onSubmit={(event) => !confirm("Vas a eliminar definitivamente este producto. Si tiene pedidos asociados se bloqueara para proteger el historial. Confirmas?") && event.preventDefault()}>
+          <input type="hidden" name="id" value={product.id} />
+          <button title="Eliminar definitivamente" className="grid h-9 w-9 place-items-center rounded-md border border-rose-200 text-rose-700 hover:bg-rose-50"><Trash2 size={16} /></button>
+        </form>
+      )}
     </div>
   );
 }
@@ -671,18 +719,18 @@ function BulkBar({ selected, categories, onClear }: { selected: string[]; catego
   return (
     <form action={bulkUpdateProducts} onSubmit={(event) => {
       const data = new FormData(event.currentTarget);
-      if (data.get("bulkAction") === "delete" && !confirm("Vas a ocultar varios productos. Confirmas la accion masiva?")) event.preventDefault();
+      if (data.get("bulkAction") === "archive" && !confirm("Vas a archivar varios productos. No apareceran en la tienda ni en la vista normal. Confirmas la accion masiva?")) event.preventDefault();
     }} className="mt-4 flex flex-col gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 lg:flex-row lg:items-center">
       {selected.map((id) => <input key={id} type="hidden" name="ids" value={id} />)}
       <p className="text-sm font-black text-emerald-900">{selected.length} seleccionados</p>
       <select name="bulkAction" required className="h-10 rounded-md border border-emerald-200 bg-white px-3 text-sm">
         <option value="">Accion masiva</option>
         <option value="publish">Publicar</option>
-        <option value="hide">Ocultar</option>
+        <option value="hide">Ocultar de tienda</option>
         <option value="sale-on">Marcar oferta</option>
         <option value="sale-off">Quitar oferta</option>
         <option value="category">Cambiar categoria</option>
-        <option value="delete">Eliminar / ocultar</option>
+        <option value="archive">Archivar</option>
       </select>
       <select name="bulkCategoryId" className="h-10 rounded-md border border-emerald-200 bg-white px-3 text-sm">
         <option value="">Categoria si aplica</option>
@@ -691,6 +739,14 @@ function BulkBar({ selected, categories, onClear }: { selected: string[]; catego
       <button className="h-10 rounded-md bg-emerald-700 px-4 text-sm font-bold text-white">Aplicar</button>
       <button type="button" onClick={onClear} className="h-10 rounded-md border border-emerald-300 px-4 text-sm font-bold text-emerald-900">Limpiar</button>
     </form>
+  );
+}
+
+function AdminNotice({ type, message }: { type: "ok" | "error"; message: string }) {
+  return (
+    <div className={cn("rounded-lg border p-4 text-sm font-bold", type === "ok" ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-rose-200 bg-rose-50 text-rose-800")}>
+      {message}
+    </div>
   );
 }
 
@@ -708,6 +764,7 @@ function ProductImage({ product }: { product: AdminProduct }) {
 }
 
 function StatusBadge({ product }: { product: AdminProduct }) {
+  if (product.archivedAt) return <Badge className="bg-stone-300 text-stone-800">Archivado</Badge>;
   const active = product.published && product.active;
   return <Badge className={active ? "bg-emerald-100 text-emerald-800" : "bg-stone-200 text-stone-700"}>{active ? "Publicado" : "Oculto"}</Badge>;
 }
@@ -836,6 +893,7 @@ function emptyProduct(categoryId: string): AdminProduct {
     isNew: true,
     published: true,
     active: true,
+    archivedAt: null,
     sortOrder: 0,
     seoTitle: null,
     seoDescription: null,

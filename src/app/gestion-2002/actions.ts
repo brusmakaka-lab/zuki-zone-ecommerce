@@ -67,7 +67,7 @@ const productSchema = z.object({
   slug: z.string().optional(),
   sku: z.string().optional(),
   shortDescription: z.string().optional(),
-  description: z.string().trim().min(8, "Agrega una descripcion completa."),
+  description: z.string().optional(),
   price: z.coerce.number().positive("El precio debe ser mayor a cero."),
   previousPrice: z.coerce.number().optional(),
   categoryId: z.string().min(1, "Elegi una categoria."),
@@ -87,11 +87,23 @@ const productSchema = z.object({
   active: z.string().optional(),
 });
 
-export async function upsertProduct(formData: FormData) {
+type ProductFormState = { ok: boolean; message: string };
+
+function productRedirect(message: string, type: "ok" | "error" = "ok"): never {
+  redirect(`/gestion-2002/productos?${type}=${encodeURIComponent(message)}`);
+}
+
+export async function upsertProduct(_: ProductFormState | null, formData: FormData): Promise<ProductFormState> {
   await requireAdmin();
-  const parsed = productSchema.parse(Object.fromEntries(formData));
+  const parsedResult = productSchema.safeParse(Object.fromEntries(formData));
+  if (!parsedResult.success) {
+    const message = parsedResult.error.issues[0]?.message ?? "No pudimos validar el producto.";
+    return { ok: false, message };
+  }
+  const parsed = parsedResult.data;
   const slug = parsed.slug ? slugify(parsed.slug) : slugify(parsed.name);
   const sku = parsed.sku?.trim() || null;
+  const description = parsed.description?.trim() || parsed.shortDescription?.trim() || `Producto ${parsed.name}.`;
   const tags = (parsed.tags ?? "")
     .split(",")
     .map((tag) => tag.trim())
@@ -102,12 +114,22 @@ export async function upsertProduct(formData: FormData) {
     .filter(Boolean);
   const mainImageUrl = parsed.mainImageUrl || imageUrls[0] || "/product-fallback.svg";
   const allImages = Array.from(new Set([mainImageUrl, ...imageUrls].filter(Boolean)));
+
+  const category = await getPrisma().category.findUnique({ where: { id: parsed.categoryId }, select: { id: true, parentId: true } });
+  if (!category || category.parentId) return { ok: false, message: "Elegi una categoria principal valida." };
+  if (parsed.subcategoryId) {
+    const subcategory = await getPrisma().category.findUnique({ where: { id: parsed.subcategoryId }, select: { parentId: true } });
+    if (!subcategory || subcategory.parentId !== parsed.categoryId) {
+      return { ok: false, message: "La subcategoria no pertenece a la categoria elegida." };
+    }
+  }
+
   const data = {
     name: parsed.name,
     slug,
     sku,
     shortDescription: parsed.shortDescription?.trim() || null,
-    description: parsed.description,
+    description,
     price: parsed.price.toFixed(2),
     previousPrice: parsed.previousPrice ? parsed.previousPrice.toFixed(2) : null,
     categoryId: parsed.categoryId,
@@ -131,10 +153,11 @@ export async function upsertProduct(formData: FormData) {
       ? await getPrisma().product.update({ where: { id: parsed.id }, data })
       : await getPrisma().product.create({ data });
   } catch (error) {
+    console.error("upsertProduct failed", error);
     if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
-      throw new Error("El slug o SKU ya esta en uso. Cambialo y volve a guardar.");
+      return { ok: false, message: "El slug o SKU ya esta en uso. Cambialo y volve a guardar." };
     }
-    throw error;
+    return { ok: false, message: "No se pudo guardar el producto. Revisa los datos y volve a intentar." };
   }
 
   await getPrisma().productImage.deleteMany({ where: { productId: product.id } });
@@ -152,6 +175,7 @@ export async function upsertProduct(formData: FormData) {
   revalidatePath("/catalogo");
   revalidatePath(`/producto/${slug}`);
   revalidatePath("/");
+  return { ok: true, message: parsed.id ? "Producto actualizado correctamente." : "Producto creado correctamente." };
 }
 
 export async function deleteProduct(formData: FormData) {
@@ -161,6 +185,59 @@ export async function deleteProduct(formData: FormData) {
   revalidatePath("/gestion-2002/productos");
   revalidatePath("/catalogo");
   revalidatePath("/");
+  productRedirect("Producto ocultado de la tienda.");
+}
+
+export async function restoreProduct(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  const product = await getPrisma().product.update({
+    where: { id },
+    data: { active: true, published: true, archivedAt: null },
+    select: { slug: true },
+  });
+  revalidatePath("/gestion-2002/productos");
+  revalidatePath("/catalogo");
+  revalidatePath(`/producto/${product.slug}`);
+  revalidatePath("/");
+  productRedirect("Producto publicado nuevamente.");
+}
+
+export async function archiveProduct(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  const product = await getPrisma().product.update({
+    where: { id },
+    data: { active: false, published: false, archivedAt: new Date() },
+    select: { slug: true },
+  });
+  revalidatePath("/gestion-2002/productos");
+  revalidatePath("/catalogo");
+  revalidatePath(`/producto/${product.slug}`);
+  revalidatePath("/");
+  productRedirect("Producto archivado. No aparece en la tienda ni en la vista normal.");
+}
+
+export async function permanentlyDeleteProduct(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id"));
+  const orderItems = await getPrisma().orderItem.count({ where: { productId: id } });
+  if (orderItems > 0) {
+    productRedirect("No se puede eliminar definitivamente porque tiene pedidos asociados. Archivarlo mantiene el historial seguro.", "error");
+  }
+  const product = await getPrisma().product.findUnique({ where: { id }, select: { slug: true } });
+  if (!product) productRedirect("Producto no encontrado.", "error");
+
+  await getPrisma().$transaction(async (tx) => {
+    await tx.cartItem.deleteMany({ where: { productId: id } });
+    await tx.productImage.deleteMany({ where: { productId: id } });
+    await tx.product.delete({ where: { id } });
+  });
+  revalidatePath("/gestion-2002/productos");
+  revalidatePath("/catalogo");
+  revalidatePath(`/producto/${product.slug}`);
+  revalidatePath("/");
+  productRedirect("Producto eliminado definitivamente.");
 }
 
 export async function updateProductQuickAction(formData: FormData) {
@@ -213,6 +290,7 @@ export async function duplicateProduct(formData: FormData) {
       isNew: product.isNew,
       published: false,
       active: false,
+      archivedAt: null,
       sortOrder: product.sortOrder,
       seoTitle: product.seoTitle,
       seoDescription: product.seoDescription,
@@ -242,18 +320,20 @@ export async function bulkUpdateProducts(formData: FormData) {
 
   const data =
     action === "publish"
-      ? { published: true, active: true }
+      ? { published: true, active: true, archivedAt: null }
       : action === "hide"
         ? { published: false, active: false }
         : action === "sale-on"
           ? { onSale: true }
           : action === "sale-off"
             ? { onSale: false }
-            : action === "delete"
-              ? { published: false, active: false }
-              : action === "category" && categoryId
-                ? { categoryId }
-                : null;
+            : action === "archive"
+              ? { published: false, active: false, archivedAt: new Date() }
+              : action === "delete"
+                ? { published: false, active: false }
+                : action === "category" && categoryId
+                  ? { categoryId }
+                  : null;
 
   if (!data) throw new Error("Elegi una accion masiva valida.");
   await getPrisma().product.updateMany({ where: { id: { in: ids } }, data });

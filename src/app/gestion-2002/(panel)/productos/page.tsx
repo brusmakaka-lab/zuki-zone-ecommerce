@@ -40,6 +40,7 @@ export default async function AdminProductsPage() {
         isNew: product.isNew,
         published: product.published,
         active: product.active,
+        archivedAt: product.archivedAt?.toISOString() ?? null,
         sortOrder: product.sortOrder,
         seoTitle: product.seoTitle,
         seoDescription: product.seoDescription,
