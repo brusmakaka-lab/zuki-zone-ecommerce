@@ -218,7 +218,11 @@ export async function getOrderForUser(orderId: string, userId: string) {
   const order = await getPrisma().order.findFirst({
     where: { id: orderId, userId },
     include: {
-      items: true,
+      items: {
+        include: {
+          product: { include: { images: { orderBy: [{ isMain: "desc" }, { sortOrder: "asc" }] } } },
+        },
+      },
       statusHistory: { orderBy: { createdAt: "asc" } },
     },
   });
@@ -228,7 +232,15 @@ export async function getOrderForUser(orderId: string, userId: string) {
     ...order,
     total: Number(order.total),
     subtotal: Number(order.subtotal),
-    items: order.items.map((item) => ({ ...item, unitPrice: Number(item.unitPrice) })),
+    items: order.items.map((item) => ({
+      ...item,
+      unitPrice: Number(item.unitPrice),
+      product: {
+        ...item.product,
+        price: Number(item.product.price),
+        previousPrice: item.product.previousPrice ? Number(item.product.previousPrice) : null,
+      },
+    })),
   };
 }
 
@@ -239,7 +251,11 @@ export async function getOrderById(orderId: string) {
   const order = await getPrisma().order.findUnique({
     where: { id: orderId },
     include: {
-      items: true,
+      items: {
+        include: {
+          product: { include: { images: { orderBy: [{ isMain: "desc" }, { sortOrder: "asc" }] } } },
+        },
+      },
       statusHistory: { orderBy: { createdAt: "asc" } },
     },
   });
@@ -249,6 +265,14 @@ export async function getOrderById(orderId: string) {
     ...order,
     total: Number(order.total),
     subtotal: Number(order.subtotal),
-    items: order.items.map((item) => ({ ...item, unitPrice: Number(item.unitPrice) })),
+    items: order.items.map((item) => ({
+      ...item,
+      unitPrice: Number(item.unitPrice),
+      product: {
+        ...item.product,
+        price: Number(item.product.price),
+        previousPrice: item.product.previousPrice ? Number(item.product.previousPrice) : null,
+      },
+    })),
   };
 }

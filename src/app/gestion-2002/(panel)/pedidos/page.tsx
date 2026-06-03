@@ -140,8 +140,9 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                       </select>
                     </label>
                     <label className="grid gap-2 text-sm font-bold">
-                      Nota del cambio
-                      <textarea name="note" placeholder="Ej: Cliente respondido por WhatsApp" rows={3} className="rounded-md border border-stone-200 bg-white px-3 py-2 font-normal" />
+                      Nota visible para el cliente
+                      <textarea name="note" placeholder="Ej: Pedido cancelado porque el producto no tiene stock disponible." rows={3} className="rounded-md border border-stone-200 bg-white px-3 py-2 font-normal" />
+                      <span className="text-xs font-normal text-stone-500">Se muestra en el seguimiento del pedido. Usala para motivos de cancelacion o aclaraciones importantes.</span>
                     </label>
                     <label className="grid gap-2 text-sm font-bold">
                       Nota interna
