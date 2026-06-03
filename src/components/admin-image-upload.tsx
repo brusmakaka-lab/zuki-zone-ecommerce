@@ -55,11 +55,12 @@ export function AdminImageUpload({ label, name, value, scope, required, hint }: 
         </label>
         {url ? (
           <button type="button" onClick={() => setUrl("")} className="h-10 rounded-md border border-rose-200 px-4 text-sm font-bold text-rose-700">
-            Eliminar
+            Quitar imagen
           </button>
         ) : null}
       </div>
       {hint ? <p className="text-xs text-stone-500">{hint}</p> : null}
+      {url ? <p className="text-xs text-stone-500">Para que el cambio quede aplicado, guarda el formulario.</p> : null}
       {message ? <p className={`text-xs font-bold ${message.startsWith("Imagen") ? "text-emerald-700" : "text-rose-700"}`}>{message}</p> : null}
     </div>
   );

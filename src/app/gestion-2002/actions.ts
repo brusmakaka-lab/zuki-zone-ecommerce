@@ -262,24 +262,104 @@ export async function bulkUpdateProducts(formData: FormData) {
   revalidatePath("/");
 }
 
+const categorySchema = z.object({
+  id: z.string().optional(),
+  name: z.string().trim().min(2, "El nombre es obligatorio."),
+  slug: z.string().optional(),
+  description: z.string().optional(),
+  imageUrl: z.string().optional(),
+  parentId: z.string().optional(),
+  sortOrder: z.coerce.number().int().optional(),
+  active: z.string().optional(),
+});
+
+function categoryRedirect(message: string, type: "ok" | "error" = "ok"): never {
+  redirect(`/gestion-2002/categorias?${type}=${encodeURIComponent(message)}`);
+}
+
 export async function upsertCategory(formData: FormData) {
   await requireAdmin();
-  const name = String(formData.get("name") ?? "");
-  const id = String(formData.get("id") ?? "");
-  const slug = slugify(String(formData.get("slug") || name));
-  const description = String(formData.get("description") ?? "");
-  const imageUrl = String(formData.get("imageUrl") || `/category-${slug}.svg`);
-  const parentIdRaw = String(formData.get("parentId") ?? "");
-  const parentId = parentIdRaw || null;
+  const parsed = categorySchema.parse(Object.fromEntries(formData));
+  const id = parsed.id || "";
+  const slug = slugify(parsed.slug || parsed.name);
+  const parentId = parsed.parentId || null;
 
-  if (id) {
-    await getPrisma().category.update({ where: { id }, data: { name, slug, description, imageUrl, parentId } });
-  } else {
-    await getPrisma().category.create({ data: { name, slug, description, imageUrl, parentId } });
+  if (id && parentId === id) categoryRedirect("Una categoria no puede ser subcategoria de si misma.", "error");
+
+  const data = {
+    name: parsed.name,
+    slug,
+    description: parsed.description?.trim() || null,
+    imageUrl: parsed.imageUrl?.trim() || null,
+    parentId,
+    sortOrder: parsed.sortOrder ?? 0,
+    active: parsed.active === "on",
+  };
+
+  try {
+    if (id) await getPrisma().category.update({ where: { id }, data });
+    else await getPrisma().category.create({ data: { ...data, active: true } });
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
+      categoryRedirect("Ya existe una categoria con esa direccion corta. Cambiala y volve a guardar.", "error");
+    }
+    throw error;
   }
   revalidatePath("/gestion-2002/categorias");
   revalidatePath("/catalogo");
   revalidatePath("/");
+  categoryRedirect(id ? "Categoria actualizada." : "Categoria creada.");
+}
+
+export async function removeCategoryImage(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!id) categoryRedirect("Categoria invalida.", "error");
+
+  await getPrisma().category.update({ where: { id }, data: { imageUrl: null } });
+  revalidatePath("/gestion-2002/categorias");
+  revalidatePath("/catalogo");
+  revalidatePath("/");
+  categoryRedirect("Imagen quitada. La categoria sigue existiendo.");
+}
+
+export async function toggleCategoryActive(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  const active = String(formData.get("active") ?? "") === "true";
+  if (!id) categoryRedirect("Categoria invalida.", "error");
+
+  await getPrisma().category.update({ where: { id }, data: { active } });
+  revalidatePath("/gestion-2002/categorias");
+  revalidatePath("/catalogo");
+  revalidatePath("/");
+  categoryRedirect(active ? "Categoria visible en la tienda." : "Categoria ocultada de la tienda.");
+}
+
+export async function deleteCategory(formData: FormData) {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!id) categoryRedirect("Categoria invalida.", "error");
+
+  const [directProducts, subcategoryProducts, children] = await Promise.all([
+    getPrisma().product.count({ where: { categoryId: id } }),
+    getPrisma().product.count({ where: { subcategoryId: id } }),
+    getPrisma().category.count({ where: { parentId: id } }),
+  ]);
+  const products = directProducts + subcategoryProducts;
+
+  if (products > 0) {
+    categoryRedirect(`No se puede eliminar porque tiene ${products} producto${products === 1 ? "" : "s"} asociado${products === 1 ? "" : "s"}. Ocultala o reasigna esos productos.`, "error");
+  }
+  if (children > 0) {
+    categoryRedirect(`No se puede eliminar porque tiene ${children} subcategoria${children === 1 ? "" : "s"}. Eliminalas o movelas primero.`, "error");
+  }
+
+  await getPrisma().category.delete({ where: { id } });
+  revalidatePath("/gestion-2002/categorias");
+  revalidatePath("/catalogo");
+  revalidatePath("/");
+  categoryRedirect("Categoria eliminada definitivamente.");
 }
 
 export async function updateOrderStatus(formData: FormData) {

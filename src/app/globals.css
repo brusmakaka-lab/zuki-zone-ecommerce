@@ -29,3 +29,35 @@ select {
   background: #047857;
   color: white;
 }
+
+.bg-emerald-700,
+.bg-violet-700 {
+  background-color: var(--brand-primary, #047857);
+}
+
+.text-emerald-700,
+.text-emerald-800,
+.text-violet-700,
+.text-violet-800 {
+  color: var(--brand-primary, #047857);
+}
+
+.border-emerald-600,
+.border-emerald-700,
+.border-violet-300 {
+  border-color: var(--brand-primary, #047857);
+}
+
+.bg-orange-500 {
+  background-color: var(--brand-accent, #f97316);
+}
+
+.text-orange-500 {
+  color: var(--brand-accent, #f97316);
+}
+
+.rounded-md,
+.rounded-lg,
+.rounded-xl {
+  border-radius: var(--brand-radius, 10px);
+}

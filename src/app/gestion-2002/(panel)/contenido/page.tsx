@@ -45,7 +45,7 @@ export default async function AdminContentPage() {
           <AdminImageUpload label="Logo header/footer" name="logoUrl" scope="brand" value={settings.logoUrl} hint="Recomendado: PNG/SVG horizontal. Header usa 44-56px de alto." />
           <AdminImageUpload label="Favicon" name="faviconUrl" scope="brand" value={settings.faviconUrl} hint="Recomendado: 32x32 o 48x48 en PNG/ICO/SVG." />
         </div>
-        <AdminImageUpload label="OpenGraph image" name="ogImageUrl" scope="brand" value={settings.ogImageUrl} hint="Recomendado: 1200x630 para compartir en redes." />
+        <AdminImageUpload label="Imagen para compartir en redes" name="ogImageUrl" scope="brand" value={settings.ogImageUrl} hint="Recomendado: 1200x630. Se ve cuando compartis la tienda por WhatsApp o redes." />
         <div className="grid gap-4 md:grid-cols-4">
           <input name="logoHeight" defaultValue={settings.logoHeight ?? 48} type="number" min={32} max={96} className="h-11 rounded-md border border-stone-200 px-3" placeholder="Alto logo" />
           <input name="primaryColor" defaultValue={settings.primaryColor ?? "#7c3aed"} type="color" className="h-11 rounded-md border border-stone-200 px-2" />
@@ -68,8 +68,8 @@ export default async function AdminContentPage() {
           </div>
           <input name="subtitle" placeholder="Subtitulo" className="h-11 rounded-md border border-stone-200 px-3" />
           <div className="grid gap-3 md:grid-cols-4">
-            <input name="ctaLabel" placeholder="CTA" className="h-11 rounded-md border border-stone-200 px-3" />
-            <input name="ctaHref" placeholder="/catalogo" className="h-11 rounded-md border border-stone-200 px-3" />
+            <input name="ctaLabel" placeholder="Texto del boton" className="h-11 rounded-md border border-stone-200 px-3" />
+            <input name="ctaHref" placeholder="Link del boton. Ej: /catalogo" className="h-11 rounded-md border border-stone-200 px-3" />
             <input name="sortOrder" type="number" placeholder="Orden" className="h-11 rounded-md border border-stone-200 px-3" />
             <label className="flex items-center gap-2 text-sm font-semibold"><input name="active" type="checkbox" defaultChecked /> Activo</label>
           </div>
@@ -83,8 +83,8 @@ export default async function AdminContentPage() {
               <input name="subtitle" defaultValue={slide.subtitle ?? ""} className="h-10 rounded-md border border-stone-200 px-3" />
               <AdminImageUpload label="Imagen actual" name="imageUrl" scope="hero" value={slide.imageUrl} />
               <div className="grid gap-3 md:grid-cols-4">
-                <input name="ctaLabel" defaultValue={slide.ctaLabel ?? ""} className="h-10 rounded-md border border-stone-200 px-3" />
-                <input name="ctaHref" defaultValue={slide.ctaHref ?? ""} className="h-10 rounded-md border border-stone-200 px-3" />
+                <input name="ctaLabel" defaultValue={slide.ctaLabel ?? ""} placeholder="Texto del boton" className="h-10 rounded-md border border-stone-200 px-3" />
+                <input name="ctaHref" defaultValue={slide.ctaHref ?? ""} placeholder="Link del boton" className="h-10 rounded-md border border-stone-200 px-3" />
                 <input name="sortOrder" type="number" defaultValue={slide.sortOrder} className="h-10 rounded-md border border-stone-200 px-3" />
                 <label className="flex items-center gap-2 font-semibold text-stone-900"><input name="active" type="checkbox" defaultChecked={slide.active} /> Activo</label>
               </div>
