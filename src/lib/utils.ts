@@ -1,17 +1,13 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { formatARS } from "@/lib/money";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 export function formatMoney(value: number | string) {
-  const amount = typeof value === "string" ? Number(value) : value;
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return formatARS(value);
 }
 
 export function slugify(value: string) {

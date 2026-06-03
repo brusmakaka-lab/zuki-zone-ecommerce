@@ -7,6 +7,7 @@ import { z } from "zod";
 import { compare, hash } from "bcryptjs";
 import { clearAdminSession, createAdminSession, requireAdminSession, validateAdminPassword } from "@/lib/admin-auth";
 import { getPrisma, hasDatabase } from "@/lib/prisma";
+import { parseARSInput } from "@/lib/money";
 import { slugify } from "@/lib/utils";
 
 async function requireAdmin() {
@@ -68,8 +69,8 @@ const productSchema = z.object({
   sku: z.string().optional(),
   shortDescription: z.string().optional(),
   description: z.string().optional(),
-  price: z.coerce.number().positive("El precio debe ser mayor a cero."),
-  previousPrice: z.coerce.number().optional(),
+  price: z.string().trim().min(1, "Ingresa un precio valido."),
+  previousPrice: z.string().optional(),
   categoryId: z.string().min(1, "Elegi una categoria."),
   subcategoryId: z.string().optional(),
   stock: z.coerce.number().int().min(0, "El stock no puede ser negativo."),
@@ -101,6 +102,17 @@ export async function upsertProduct(_: ProductFormState | null, formData: FormDa
     return { ok: false, message };
   }
   const parsed = parsedResult.data;
+  const price = parseARSInput(parsed.price);
+  const previousPrice = parsed.previousPrice?.trim() ? parseARSInput(parsed.previousPrice) : null;
+  if (!Number.isFinite(price) || price <= 0) {
+    return { ok: false, message: "Ingresa un precio valido." };
+  }
+  if (previousPrice != null && (!Number.isFinite(previousPrice) || previousPrice <= 0)) {
+    return { ok: false, message: "Ingresa un precio anterior valido." };
+  }
+  if (previousPrice != null && previousPrice <= price) {
+    return { ok: false, message: "El precio anterior debe ser mayor al precio actual para mostrar oferta." };
+  }
   const slug = parsed.slug ? slugify(parsed.slug) : slugify(parsed.name);
   const sku = parsed.sku?.trim() || null;
   const description = parsed.description?.trim() || parsed.shortDescription?.trim() || `Producto ${parsed.name}.`;
@@ -130,8 +142,8 @@ export async function upsertProduct(_: ProductFormState | null, formData: FormDa
     sku,
     shortDescription: parsed.shortDescription?.trim() || null,
     description,
-    price: parsed.price.toFixed(2),
-    previousPrice: parsed.previousPrice ? parsed.previousPrice.toFixed(2) : null,
+    price: price.toFixed(2),
+    previousPrice: previousPrice != null ? previousPrice.toFixed(2) : null,
     categoryId: parsed.categoryId,
     subcategoryId: parsed.subcategoryId || null,
     stock: parsed.stock,
@@ -359,7 +371,11 @@ function categoryRedirect(message: string, type: "ok" | "error" = "ok"): never {
 
 export async function upsertCategory(formData: FormData) {
   await requireAdmin();
-  const parsed = categorySchema.parse(Object.fromEntries(formData));
+  const parsedResult = categorySchema.safeParse(Object.fromEntries(formData));
+  if (!parsedResult.success) {
+    categoryRedirect(parsedResult.error.issues[0]?.message ?? "No pudimos validar la categoria.", "error");
+  }
+  const parsed = parsedResult.data;
   const id = parsed.id || "";
   const slug = slugify(parsed.slug || parsed.name);
   const parentId = parsed.parentId || null;
@@ -380,10 +396,11 @@ export async function upsertCategory(formData: FormData) {
     if (id) await getPrisma().category.update({ where: { id }, data });
     else await getPrisma().category.create({ data: { ...data, active: true } });
   } catch (error) {
+    console.error("upsertCategory failed", error);
     if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
       categoryRedirect("Ya existe una categoria con esa direccion corta. Cambiala y volve a guardar.", "error");
     }
-    throw error;
+    categoryRedirect("No se pudo guardar la categoria. Revisa los datos y volve a intentar.", "error");
   }
   revalidatePath("/gestion-2002/categorias");
   revalidatePath("/catalogo");

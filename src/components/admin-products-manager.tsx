@@ -39,6 +39,7 @@ import {
   updateProductQuickAction,
   upsertProduct,
 } from "@/app/gestion-2002/actions";
+import { formatARSInput, parseARSInput } from "@/lib/money";
 import { cn, formatMoney, slugify } from "@/lib/utils";
 
 type AdminCategory = {
@@ -481,10 +482,12 @@ function ProductEditor({ product, categories, onClose }: { product: AdminProduct
 
             <div className={cn("grid gap-4 md:grid-cols-2", activeTab !== "Precio y stock" && "hidden")}>
                 <Field label="Precio" required>
-                  <input name="price" type="number" min="1" step="0.01" defaultValue={product.price || ""} className={inputClass} />
+                  <input name="price" type="text" inputMode="numeric" defaultValue={formatARSInput(product.price)} onBlur={normalizeMoneyInput} placeholder="26.690" className={inputClass} />
+                  <span className="text-xs font-medium leading-5 text-stone-500">Podes escribir 26690 o 26.690. Se guardara como {formatMoney(26690)}.</span>
                 </Field>
                 <Field label="Precio anterior">
-                  <input name="previousPrice" type="number" min="0" step="0.01" defaultValue={product.previousPrice ?? ""} className={inputClass} />
+                  <input name="previousPrice" type="text" inputMode="numeric" defaultValue={formatARSInput(product.previousPrice)} onBlur={normalizeMoneyInput} placeholder="30.000" className={inputClass} />
+                  <span className="text-xs font-medium leading-5 text-stone-500">Debe ser mayor al precio actual para mostrar oferta.</span>
                 </Field>
                 <Field label="Stock" required>
                   <input name="stock" type="number" min="0" defaultValue={product.stock} className={inputClass} />
@@ -561,6 +564,11 @@ function ProductEditor({ product, categories, onClose }: { product: AdminProduct
       </div>
     </div>
   );
+}
+
+function normalizeMoneyInput(event: React.FocusEvent<HTMLInputElement>) {
+  const parsed = parseARSInput(event.currentTarget.value);
+  if (Number.isFinite(parsed) && parsed > 0) event.currentTarget.value = formatARSInput(parsed);
 }
 
 function ImageManager({

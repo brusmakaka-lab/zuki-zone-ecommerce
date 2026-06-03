@@ -7,6 +7,7 @@ import { OrderStatus } from "@prisma/client";
 import { auth } from "@/auth";
 import { getPrisma, hasDatabase } from "@/lib/prisma";
 import { getProductsByIds, getSettings } from "@/lib/data";
+import { formatARS } from "@/lib/money";
 import { whatsappUrl } from "@/lib/utils";
 
 const profileSchema = z.object({
@@ -116,7 +117,7 @@ export async function createCheckoutOrder(_: unknown, formData: FormData) {
   const summary = [
     `Hola, quiero consultar por el pedido #${order.orderNumber}.`,
     ...items.map((item) => `- ${item.product.name} x${item.quantity}`),
-    `Total: $${total.toLocaleString("es-AR")}`,
+    `Total: ${formatARS(total)}`,
     `Cliente: ${parsed.data.fullName}`,
     `Telefono: ${parsed.data.phone}`,
     `Direccion: ${parsed.data.address}, ${parsed.data.city}`,
