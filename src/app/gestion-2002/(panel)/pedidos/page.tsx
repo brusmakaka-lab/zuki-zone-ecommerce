@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Download, Search } from "lucide-react";
+import { CheckCircle2, Clock, Download, PackageCheck, Search, Truck } from "lucide-react";
 import { OrderStatus } from "@prisma/client";
 import { updateOrderStatus } from "@/app/gestion-2002/actions";
+import { AdminConfirmSubmitButton } from "@/components/admin-confirm-submit-button";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { getPrisma, hasDatabase } from "@/lib/prisma";
 import { orderStatusLabels } from "@/lib/order-status";
@@ -9,7 +10,7 @@ import { cn, formatMoney, whatsappUrl } from "@/lib/utils";
 
 type SearchParams = Promise<{ estado?: string; q?: string }>;
 
-const closedStatuses = new Set<OrderStatus>([OrderStatus.ENTREGADO, OrderStatus.CANCELADO]);
+const closedStatuses = new Set<OrderStatus>([OrderStatus.ENTREGADO]);
 const newStatuses = new Set<OrderStatus>([OrderStatus.CONSULTA_RECIBIDA, OrderStatus.PENDIENTE_DE_PAGO]);
 
 export default async function AdminOrdersPage({ searchParams }: { searchParams: SearchParams }) {
@@ -38,6 +39,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
     total: allOrders.length,
     new: allOrders.filter((order) => newStatuses.has(order.status)).length,
     closed: allOrders.filter((order) => closedStatuses.has(order.status)).length,
+    cancelled: allOrders.filter((order) => order.status === OrderStatus.CANCELADO).length,
     amount: allOrders.reduce((sum, order) => sum + Number(order.total), 0),
   };
 
@@ -57,10 +59,11 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
         </div>
       </header>
 
-      <section className="grid gap-3 md:grid-cols-4">
+      <section className="grid gap-3 md:grid-cols-5">
         <Metric label="Pedidos totales" value={String(metrics.total)} />
         <Metric label="Pedidos nuevos" value={String(metrics.new)} />
         <Metric label="Cerrados" value={String(metrics.closed)} />
+        <Metric label="Cancelados" value={String(metrics.cancelled)} />
         <Metric label="Total estimado" value={formatMoney(metrics.amount)} />
       </section>
 
@@ -94,6 +97,9 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-xl font-black">Pedido #{order.orderNumber}</p>
                       <StatusBadge status={order.status} />
+                      <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-600">
+                        {order.createdAt.toLocaleString("es-AR")}
+                      </span>
                     </div>
                     <div className="mt-3 grid gap-1 text-sm text-stone-600">
                       <p><strong className="text-stone-950">{order.customerName}</strong> · {order.customerPhone}</p>
@@ -101,6 +107,9 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                       <p>{order.address}, {order.city}</p>
                       {order.reference ? <p>Referencia: {order.reference}</p> : null}
                       {order.observations ? <p>Observaciones: {order.observations}</p> : null}
+                      {order.customerNote ? <p className="rounded-md bg-emerald-50 p-2 font-semibold text-emerald-900">Nota para cliente: {order.customerNote}</p> : null}
+                      {order.cancelReason ? <p className="rounded-md bg-rose-50 p-2 font-semibold text-rose-800">Motivo de cancelacion: {order.cancelReason}</p> : null}
+                      {order.adminNote ? <p className="rounded-md bg-stone-50 p-2 font-semibold text-stone-700">Nota interna: {order.adminNote}</p> : null}
                     </div>
                     <div className="mt-4 overflow-hidden rounded-md border border-stone-100">
                       {order.items.map((item) => (
@@ -116,7 +125,11 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                         <WhatsAppIcon size={19} className="h-[19px] w-[19px]" />
                         WhatsApp
                       </a>
+                      <Link href={`/pedido/${order.id}`} target="_blank" className="inline-flex h-10 items-center rounded-md border border-stone-300 px-4 text-sm font-bold text-stone-800">
+                        Ver seguimiento
+                      </Link>
                     </div>
+                    <QuickActions orderId={order.id} currentStatus={order.status} customerName={order.customerName} />
                     <div className="mt-4 rounded-md bg-stone-50 p-3">
                       <p className="text-sm font-black text-stone-950">Historial</p>
                       <div className="mt-2 grid gap-2">
@@ -141,8 +154,18 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                     </label>
                     <label className="grid gap-2 text-sm font-bold">
                       Nota visible para el cliente
-                      <textarea name="note" placeholder="Ej: Pedido cancelado porque el producto no tiene stock disponible." rows={3} className="rounded-md border border-stone-200 bg-white px-3 py-2 font-normal" />
-                      <span className="text-xs font-normal text-stone-500">Se muestra en el seguimiento del pedido. Usala para motivos de cancelacion o aclaraciones importantes.</span>
+                      <textarea name="customerNote" defaultValue={order.customerNote ?? ""} placeholder="Ej: Tu pedido esta listo para coordinar retiro." rows={3} className="rounded-md border border-stone-200 bg-white px-3 py-2 font-normal" />
+                      <span className="text-xs font-normal text-stone-500">Se muestra en el seguimiento del pedido.</span>
+                    </label>
+                    <label className="grid gap-2 text-sm font-bold">
+                      Motivo de cancelacion
+                      <textarea name="cancelReason" defaultValue={order.cancelReason ?? ""} placeholder="Ej: Producto sin stock o pedido anulado por el cliente." rows={3} className="rounded-md border border-stone-200 bg-white px-3 py-2 font-normal" />
+                      <span className="text-xs font-normal text-stone-500">Solo se usa cuando el estado queda Cancelado.</span>
+                    </label>
+                    <label className="grid gap-2 text-sm font-bold">
+                      Nota para historial
+                      <textarea name="note" placeholder="Ej: Cliente respondido por WhatsApp" rows={2} className="rounded-md border border-stone-200 bg-white px-3 py-2 font-normal" />
+                      <span className="text-xs font-normal text-stone-500">Queda guardada en el historial del pedido.</span>
                     </label>
                     <label className="grid gap-2 text-sm font-bold">
                       Nota interna
@@ -171,6 +194,70 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
       <p className="text-sm font-semibold text-stone-500">{label}</p>
       <p className="mt-2 text-2xl font-black text-stone-950">{value}</p>
+    </div>
+  );
+}
+
+function QuickActions({ orderId, currentStatus, customerName }: { orderId: string; currentStatus: OrderStatus; customerName: string }) {
+  const actions: { label: string; status: OrderStatus; note: string; icon: React.ReactNode; className: string; disabled?: boolean }[] = [
+    {
+      label: "Confirmar",
+      status: OrderStatus.PAGO_CONFIRMADO,
+      note: "Pedido confirmado por el comercio.",
+      icon: <CheckCircle2 size={16} />,
+      className: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    },
+    {
+      label: "Preparar",
+      status: OrderStatus.PREPARANDO_PEDIDO,
+      note: "El pedido paso a preparacion.",
+      icon: <PackageCheck size={16} />,
+      className: "border-amber-200 bg-amber-50 text-amber-900",
+    },
+    {
+      label: "Enviado",
+      status: OrderStatus.ENVIADO,
+      note: "El pedido fue marcado como enviado o en camino.",
+      icon: <Truck size={16} />,
+      className: "border-blue-200 bg-blue-50 text-blue-800",
+    },
+    {
+      label: "Cerrar",
+      status: OrderStatus.ENTREGADO,
+      note: "Pedido cerrado como entregado.",
+      icon: <CheckCircle2 size={16} />,
+      className: "border-stone-300 bg-white text-stone-800",
+    },
+  ];
+
+  return (
+    <div className="mt-4 rounded-lg border border-stone-100 bg-stone-50 p-3">
+      <p className="flex items-center gap-2 text-sm font-black text-stone-950">
+        <Clock size={16} />
+        Acciones rapidas
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {actions.map((action) => (
+          <form key={action.status} action={updateOrderStatus}>
+            <input type="hidden" name="orderId" value={orderId} />
+            <input type="hidden" name="status" value={action.status} />
+            <input type="hidden" name="note" value={action.note} />
+            <button disabled={currentStatus === action.status} className={cn("inline-flex h-9 items-center gap-2 rounded-md border px-3 text-xs font-bold disabled:cursor-not-allowed disabled:opacity-45", action.className)}>
+              {action.icon}
+              {action.label}
+            </button>
+          </form>
+        ))}
+        <form action={updateOrderStatus}>
+          <input type="hidden" name="orderId" value={orderId} />
+          <input type="hidden" name="status" value={OrderStatus.CANCELADO} />
+          <input type="hidden" name="note" value={`Pedido cancelado desde el panel. Cliente: ${customerName}.`} />
+          <input type="hidden" name="cancelReason" value="Pedido cancelado desde el panel." />
+          <AdminConfirmSubmitButton disabled={currentStatus === OrderStatus.CANCELADO} message="Vas a cancelar el pedido y restaurar el stock de sus productos. Confirmas?">
+            Cancelar
+          </AdminConfirmSubmitButton>
+        </form>
+      </div>
     </div>
   );
 }

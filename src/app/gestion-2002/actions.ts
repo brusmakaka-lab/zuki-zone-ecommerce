@@ -367,19 +367,62 @@ export async function updateOrderStatus(formData: FormData) {
   const orderId = String(formData.get("orderId"));
   const status = formData.get("status") as OrderStatus;
   const note = String(formData.get("note") ?? "");
-  const adminNote = String(formData.get("adminNote") ?? "");
+  const adminNote = formData.has("adminNote") ? String(formData.get("adminNote") ?? "") : undefined;
+  const customerNote = formData.has("customerNote") ? String(formData.get("customerNote") ?? "") : undefined;
+  const cancelReason = formData.has("cancelReason") ? String(formData.get("cancelReason") ?? "") : undefined;
 
-  await getPrisma().order.update({
-    where: { id: orderId },
-    data: {
-      status,
-      adminNote: adminNote || null,
-      statusHistory: { create: { status, note: note || null } },
-    },
+  const prisma = getPrisma();
+  await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+    if (!order) throw new Error("Pedido no encontrado.");
+    if (!Object.values(OrderStatus).includes(status)) throw new Error("Estado invalido.");
+
+    if (status === OrderStatus.CANCELADO && order.status !== OrderStatus.CANCELADO) {
+      for (const item of order.items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { increment: item.quantity } },
+        });
+      }
+    }
+
+    if (order.status === OrderStatus.CANCELADO && status !== OrderStatus.CANCELADO) {
+      for (const item of order.items) {
+        const product = await tx.product.findUnique({ where: { id: item.productId }, select: { stock: true, name: true } });
+        if (!product || product.stock < item.quantity) {
+          throw new Error(`No hay stock suficiente para reactivar ${product?.name ?? "este producto"}.`);
+        }
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } },
+        });
+      }
+    }
+
+    await tx.order.update({
+      where: { id: orderId },
+      data: {
+        status,
+        adminNote: adminNote === undefined ? order.adminNote : adminNote || null,
+        customerNote: customerNote === undefined ? order.customerNote : customerNote || note || null,
+        cancelReason:
+          status === OrderStatus.CANCELADO
+            ? cancelReason === undefined
+              ? order.cancelReason || note || customerNote || null
+              : cancelReason || note || customerNote || null
+            : null,
+        statusHistory: { create: { status, note: note || customerNote || cancelReason || null } },
+      },
+    });
   });
 
   revalidatePath("/gestion-2002/pedidos");
   revalidatePath(`/pedido/${orderId}`);
+  revalidatePath("/catalogo");
+  revalidatePath("/");
 }
 
 export async function updateSettings(formData: FormData) {

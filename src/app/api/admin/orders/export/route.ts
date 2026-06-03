@@ -10,7 +10,7 @@ export async function GET() {
 
   const orders = await getPrisma().order.findMany({ include: { items: true }, orderBy: { createdAt: "desc" } });
   const rows = [
-    ["numero", "fecha", "estado", "cliente", "telefono", "email", "localidad", "total", "productos"],
+    ["numero", "fecha", "estado", "cliente", "telefono", "email", "localidad", "total", "nota_cliente", "motivo_cancelacion", "nota_interna", "productos"],
     ...orders.map((order) => [
       String(order.orderNumber),
       order.createdAt.toISOString(),
@@ -20,6 +20,9 @@ export async function GET() {
       order.customerEmail ?? "",
       order.city,
       String(order.total),
+      order.customerNote ?? "",
+      order.cancelReason ?? "",
+      order.adminNote ?? "",
       order.items.map((item) => `${item.productName} x${item.quantity}`).join(" | "),
     ]),
   ];

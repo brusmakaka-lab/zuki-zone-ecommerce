@@ -18,9 +18,10 @@ export default async function OrderPage({ params }: { params: Params }) {
     getSettings(),
   ]);
   if (!order) notFound();
-  const latestStatusNote = [...order.statusHistory].reverse().find((history) => history.note)?.note;
   const cancelled = order.status === "CANCELADO";
   const delivered = order.status === "ENTREGADO";
+  const latestStatusNote = [...order.statusHistory].reverse().find((history) => history.note)?.note;
+  const visibleNote = cancelled ? order.cancelReason || order.customerNote || latestStatusNote : order.customerNote || latestStatusNote;
   const whatsappMessage = cancelled
     ? `Hola Zuki Zone, quiero consultar por mi pedido cancelado #${order.orderNumber}.`
     : `Hola Zuki Zone, quiero consultar por mi pedido #${order.orderNumber}. Estado: ${orderStatusLabels[order.status]}.`;
@@ -42,7 +43,8 @@ export default async function OrderPage({ params }: { params: Params }) {
         <p className="mt-2 font-semibold text-stone-700">Estado actual: {orderStatusLabels[order.status]}</p>
         <div className={`mt-5 rounded-lg border p-4 text-sm font-semibold ${cancelled ? "border-rose-200 bg-rose-50 text-rose-800" : delivered ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
           {cancelled ? "Este pedido fue cancelado. Si queres retomarlo, podes volver a comprar los productos o escribirnos por WhatsApp." : delivered ? "Compra finalizada. Gracias por elegir Zuki Zone." : "Estamos revisando tu pedido. Te vamos a contactar para coordinar pago, retiro o envio."}
-          {latestStatusNote ? <p className="mt-2 font-normal">{latestStatusNote}</p> : null}
+          {visibleNote ? <p className="mt-2 font-normal">{visibleNote}</p> : null}
+          {order.customerNote && order.customerNote !== visibleNote ? <p className="mt-2 font-normal">{order.customerNote}</p> : null}
         </div>
         <div className="mt-8">
           <StatusTracker status={order.status} />
