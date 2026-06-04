@@ -6,6 +6,7 @@ import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { ProductViewTracker, TrackedWhatsAppLink } from "@/components/analytics-trackers";
 import { ProductCard } from "@/components/product-card";
 import { ProductGallery } from "@/components/product-gallery";
+import { TrustPanel } from "@/components/trust-brand";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { getProductBySlug, getProducts, getSettings } from "@/lib/data";
 import { formatMoney, whatsappUrl } from "@/lib/utils";
@@ -138,6 +139,10 @@ export default async function ProductDetailPage({ params }: { params: Params }) 
           <FAQ question="Puedo comprar como invitado?" answer="Si. No hace falta crear una cuenta para enviar la consulta y dejar el pedido registrado." />
           <FAQ question="El precio queda confirmado?" answer="Confirmamos precio, stock y forma de pago antes de preparar el pedido." />
         </div>
+      </section>
+
+      <section className="mt-8">
+        <TrustPanel settings={settings} compact />
       </section>
 
       {related.length ? (

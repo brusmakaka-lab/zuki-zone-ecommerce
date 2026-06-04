@@ -7,8 +7,9 @@ import { createCheckoutOrder } from "@/app/actions";
 import { CheckoutStartedTracker } from "@/components/analytics-trackers";
 import { useCart } from "@/components/cart/cart-provider";
 import { ProductCard } from "@/components/product-card";
+import { TrustPanel } from "@/components/trust-brand";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
-import type { StoreCategory, StoreProduct } from "@/lib/demo-data";
+import type { StoreCategory, StoreProduct, StoreSettings } from "@/lib/demo-data";
 import { formatMoney } from "@/lib/utils";
 
 export function CheckoutClient({
@@ -16,11 +17,13 @@ export function CheckoutClient({
   userName,
   recommended,
   categories,
+  settings,
 }: {
   userEmail: string;
   userName: string;
   recommended: StoreProduct[];
   categories: StoreCategory[];
+  settings: StoreSettings;
 }) {
   const { items, total } = useCart();
   const [state, action, pending] = useActionState(createCheckoutOrder, null);
@@ -115,6 +118,10 @@ export function CheckoutClient({
             <textarea name="observations" rows={4} className="rounded-md border border-stone-200 px-3 py-2 font-normal" />
           </label>
           {state?.message ? <p className="rounded-md bg-rose-50 p-3 text-sm font-semibold text-rose-800">{state.message}</p> : null}
+          <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-4 text-sm leading-6 text-emerald-950">
+            <p className="font-black">Pedido sin sorpresas</p>
+            <p className="mt-1">Guardamos tu pedido, verificamos stock y te escribimos por WhatsApp antes de preparar o cobrar la compra.</p>
+          </div>
           <button disabled={pending} className="h-12 rounded-md bg-emerald-700 font-bold text-white disabled:bg-stone-300">
             {pending ? "Generando pedido..." : "Generar pedido y abrir WhatsApp"}
           </button>
@@ -142,6 +149,9 @@ export function CheckoutClient({
           <Trust icon={<ShieldCheck size={16} />} text="Pedido registrado con seguimiento" />
         </div>
       </aside>
+      <div className="lg:col-span-2">
+        <TrustPanel settings={settings} compact />
+      </div>
     </div>
   );
 }

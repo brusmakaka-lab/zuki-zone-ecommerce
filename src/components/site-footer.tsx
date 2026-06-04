@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Camera, Mail, MapPin, Share2 } from "lucide-react";
+import { Camera, Clock, CreditCard, Mail, MapPin, RotateCcw, Share2, Truck } from "lucide-react";
 import type { StoreSettings } from "@/lib/demo-data";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { whatsappUrl } from "@/lib/utils";
@@ -34,6 +34,7 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
             <Link href="/envios">Envios</Link>
             <Link href="/cambios-devoluciones">Cambios y devoluciones</Link>
             <Link href="/preguntas-frecuentes">Preguntas frecuentes</Link>
+            <Link href="/politica-privacidad">Politica de privacidad</Link>
           </div>
         </div>
         <div>
@@ -51,6 +52,9 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
             <span className="inline-flex items-center gap-2">
               <MapPin className="h-4 w-4" /> {settings.address}
             </span>
+            <span className="inline-flex items-center gap-2">
+              <Clock className="h-4 w-4" /> Lun a sab de 9 a 19 hs
+            </span>
             {settings.instagramUrl ? (
               <a className="inline-flex items-center gap-2" href={settings.instagramUrl}>
                 <Camera className="h-4 w-4" /> Instagram
@@ -64,7 +68,13 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
           </div>
         </div>
         <div>
-          <p className="font-black">Newsletter</p>
+          <p className="font-black">Confianza</p>
+          <div className="mt-3 grid gap-2.5 text-sm text-stone-300">
+            <span className="inline-flex items-center gap-2"><CreditCard className="h-4 w-4" /> Pago a coordinar</span>
+            <span className="inline-flex items-center gap-2"><Truck className="h-4 w-4" /> Envios y retiro pactados</span>
+            <span className="inline-flex items-center gap-2"><RotateCcw className="h-4 w-4" /> Cambios con numero de pedido</span>
+          </div>
+          <p className="mt-5 font-black">Newsletter</p>
           <p className="mt-3 text-sm leading-6 text-stone-300">{settings.newsletterText ?? "Recibi novedades y ofertas."}</p>
           <form className="mt-3 grid gap-2">
             <input type="email" placeholder="Email" className="h-11 rounded-md border border-white/10 bg-white px-3 text-sm text-stone-950" />

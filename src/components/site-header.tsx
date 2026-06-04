@@ -31,7 +31,7 @@ export async function SiteHeader({ settings, categories }: { settings: StoreSett
           )}
           <span className="leading-tight">
             <span className="block text-base font-black text-stone-950">{settings.storeName}</span>
-            <span className="hidden text-xs text-stone-500 sm:block">Tienda online</span>
+            <span className="hidden text-xs text-stone-500 sm:block">Bazar y deco online</span>
           </span>
         </Link>
         <nav className="ml-auto hidden items-center gap-6 text-sm font-medium text-stone-700 md:flex">

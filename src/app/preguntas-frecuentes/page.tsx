@@ -1,9 +1,12 @@
 const faqs = [
   ["Como compro?", "Agregas productos al carrito, completas tus datos y enviamos la consulta por WhatsApp para confirmar stock, pago y entrega."],
   ["Tengo que crear una cuenta?", "No. Podes comprar como invitado. Si usas cuenta, guardas datos y seguimiento."],
-  ["Como pago?", "El pago se coordina con la tienda antes de preparar el pedido."],
-  ["Hacen envios?", "Si. Las opciones dependen de zona, producto y disponibilidad."],
+  ["Como pago?", "El pago se coordina con la tienda antes de preparar el pedido. Podemos acordar transferencia, efectivo u otra opcion disponible segun la compra."],
+  ["Hacen envios?", "Si. Las opciones dependen de zona, producto y disponibilidad. Te confirmamos costo y tiempos por WhatsApp antes de avanzar."],
+  ["Puedo retirar?", "Si. El retiro se coordina con dia y horario pactado para que el pedido este listo."],
+  ["Cual es el horario de atencion?", "Respondemos consultas de lunes a sabados de 9 a 19 hs."],
   ["Como sigo mi pedido?", "Con el numero de pedido podes consultar el estado desde Mis pedidos o por WhatsApp."],
+  ["Que pasa con mis datos?", "Usamos tus datos solo para registrar el pedido, contactarte y coordinar entrega o retiro. No vendemos tu informacion."],
 ];
 
 export default function FAQPage() {

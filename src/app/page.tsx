@@ -1,10 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CreditCard, MapPinned, PackageCheck, ShieldCheck, Store, Truck } from "lucide-react";
+import { ArrowRight, CreditCard, MapPinned, PackageCheck, Store, Truck } from "lucide-react";
 import { HeroSlider } from "@/components/hero-slider";
 import { ProductCarousel } from "@/components/product-carousel";
 import { ScrollReveal } from "@/components/scroll-reveal";
-import { WhatsAppIcon } from "@/components/whatsapp-icon";
+import { TrustPanel, TrustStrip } from "@/components/trust-brand";
 import { getBenefits, getCategories, getHeroSlides, getIdeas, getProducts, getSettings } from "@/lib/data";
 
 const iconMap = {
@@ -66,20 +66,11 @@ export default async function Home() {
       </ScrollReveal>
 
       <ScrollReveal className="mx-auto max-w-7xl px-4 pb-6 sm:px-6 lg:px-8">
-        <div className="grid gap-3 rounded-lg border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-950 md:grid-cols-3">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-5 w-5 text-emerald-700" />
-            <span className="font-bold">Pedido registrado y con seguimiento</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <CreditCard className="h-5 w-5 text-emerald-700" />
-            <span className="font-bold">Pagas al coordinar la compra</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <WhatsAppIcon size={22} className="h-5 w-5" />
-            <span className="font-bold">Atencion directa por WhatsApp</span>
-          </div>
-        </div>
+        <TrustStrip settings={settings} />
+      </ScrollReveal>
+
+      <ScrollReveal>
+        <TrustPanel settings={settings} />
       </ScrollReveal>
 
       <ScrollReveal className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -93,7 +84,7 @@ export default async function Home() {
               <div className="relative aspect-[5/3]">
                 <Image src={category.imageUrl ?? "/product-fallback.svg"} alt={category.name} fill sizes={index === 0 ? "(min-width: 1024px) 66vw, 100vw" : "(min-width: 1024px) 33vw, 100vw"} className="object-cover opacity-85 transition duration-500 group-hover:scale-105" />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-stone-950/20 to-transparent" />
               <div className="absolute bottom-0 p-5 text-white">
                 <p className="text-2xl font-black">{category.name}</p>
                 <p className="mt-1 max-w-md text-sm text-stone-100">{category.description}</p>
