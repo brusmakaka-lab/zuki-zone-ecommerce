@@ -39,3 +39,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Respaldo público: configuración y artefactos privados
+.env*
+!.env.example
+.neon
+.npmrc
+.vercel/
+*.log
+*.tsbuildinfo
+audits/
+.audit-shots/
+test-results/
+playwright-report/
+*.sqlite*
+*.db

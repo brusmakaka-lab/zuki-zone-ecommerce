@@ -1,82 +1,70 @@
 # Zuki Zone E-commerce
 
-E-commerce full-stack con Next.js App Router, TypeScript, TailwindCSS, Prisma, Auth.js/NextAuth, PostgreSQL Neon y panel administrador.
+Tienda online con catálogo, carrito, checkout por WhatsApp y administración de productos y contenidos.
 
-Produccion: https://zuki-zone.vercel.app
-Panel admin: https://zuki-zone.vercel.app/gestion-2002/login
+Respaldo público del código local seleccionado el **16 de noviembre de 2026**. Las cuatro variantes Zuki se revisaron por archivos y esquema; tienen diferencias funcionales y se conservan en repositorios independientes. Este respaldo identifica el estado vigente encontrado; no presenta los prototipos como productos terminados.
 
-## Stack
+## Qué contiene
 
-- Next.js 16 App Router + React 19
-- TypeScript + TailwindCSS 4
-- Prisma 6 + PostgreSQL Neon
-- Auth.js con Google OAuth opcional para clientes
-- Admin propio con email/password y cookie httpOnly
-- Carrito client-side, checkout invitado y pedido por WhatsApp
+- Catálogo y detalle de productos, categorías, imágenes y carrito.
+- Pedidos, estados e historial; perfiles de clientes y suscripción al newsletter.
+- Autenticación con Auth.js y proveedor Google configurable.
+- Administración en `/gestion-2002`: productos y contenido de la tienda, como slides, beneficios e ideas.
+- Código para subir imágenes mediante Vercel Blob. El checkout principal prepara la comunicación por WhatsApp.
 
-## Variables de entorno
+**Tecnologías:** Next.js 16.2.6 · React 19.2.4 · Prisma 6.19.3 · Auth.js · Tailwind CSS 4. Las versiones exactas de las dependencias están fijadas en `package-lock.json`. El indicador `private: true` de package.json evita publicar el paquete en npm; no define la visibilidad de GitHub.
 
-```bash
-DATABASE_URL="postgresql://USER:PASSWORD@HOST/db?sslmode=require"
-DIRECT_URL="postgresql://USER:PASSWORD@HOST/db?sslmode=require"
-AUTH_SECRET="openssl-rand-base64-32"
-AUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="mismo-valor-si-tu-entorno-lo-requiere"
-NEXTAUTH_URL="http://localhost:3000"
-GOOGLE_CLIENT_ID=""
-GOOGLE_CLIENT_SECRET=""
-ADMIN_EMAIL="admin@zukizone.com"
-ADMIN_PASSWORD="admin1234"
-BLOB_READ_WRITE_TOKEN=""
-NEXT_PUBLIC_SITE_URL="http://localhost:3000"
-NEXT_PUBLIC_WHATSAPP_NUMBER="5491123456789"
-MERCADOPAGO_ACCESS_TOKEN=""
-```
+## Instalación local
 
-`ADMIN_EMAIL` y `ADMIN_PASSWORD` crean el acceso inicial. Cambiar la contrasena desde `/gestion-2002/configuracion/seguridad`.
-
-## Desarrollo
+Entorno verificado: Node.js 24.13.1 y npm 11.8.0 en Windows, con el lockfile incluido. Crear una configuración local desde `.env.example`, completar únicamente valores propios y preparar una base de desarrollo cuando corresponda.
 
 ```bash
-npm install
-npm run dev
-npm run prisma:migrate -- --name init
-npm run db:seed
-```
-
-## Produccion
-
-```bash
-npm run prisma:deploy
-npm run db:seed
+npm ci
+npm run prisma:generate
+npm run lint
+npx tsc --noEmit
 npm run build
-npx vercel deploy --prod --yes
+npm run dev
 ```
 
-## Imagenes y Blob
+Los pasos de base que aparecen abajo deben realizarse antes de usar las pantallas que consultan datos. `npm run start` sirve el build ya generado. Los comandos anteriores no publican un despliegue.
 
-- Upload real: `/api/admin/upload`, protegido por sesion admin.
-- Formatos: jpg, jpeg, png, webp, svg e ico.
-- Maximo: 4 MB.
-- Requiere `BLOB_READ_WRITE_TOKEN`.
-- Si falta el token, el admin muestra error claro y no simula exito.
+## Configuración
 
-## Mapa de imagenes editables
+| Variables | Uso |
+| --- | --- |
+| `DATABASE_URL`, `DIRECT_URL` | PostgreSQL de la aplicación y conexión para herramientas de base |
+| `AUTH_SECRET`, `AUTH_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` | Configuración de Auth.js y compatibilidad |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | OAuth de Google, si se habilita |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Cuenta inicial usada por el seed; definir valores propios |
+| `BLOB_READ_WRITE_TOKEN` | Subida de imágenes |
+| `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_WHATSAPP_NUMBER` | URL pública y número de contacto |
+| `MERCADOPAGO_ACCESS_TOKEN` | Variable prevista; no certifica un flujo de cobro integrado |
 
-- Logo: `SiteSettings.logoUrl`, alto `SiteSettings.logoHeight`; se renderiza en header, footer y metadata fallback.
-- Favicon: `SiteSettings.faviconUrl`; se aplica en `generateMetadata().icons`.
-- OpenGraph: `SiteSettings.ogImageUrl`; se aplica en `generateMetadata().openGraph.images`.
-- Hero: `HeroSlide.imageUrl`; se renderiza en el slider de home.
-- Categorias/subcategorias: `Category.imageUrl`; se renderiza en home y catalogo.
-- Productos: `ProductImage.url`, `ProductImage.isMain`, `ProductImage.sortOrder`; catalogo usa la principal y detalle muestra galeria.
-- Ideas: `InspirationIdea.imageUrl`; se renderiza en Inspiracion Zuki.
+Las variables de servidor no deben usar el prefijo `NEXT_PUBLIC_`. Los secretos y credenciales reales no forman parte del repositorio.
 
-## Operacion admin
+## Datos y esquema
 
-- Login: `/gestion-2002/login`.
-- Productos e imagenes: `/gestion-2002/productos`.
-- Categorias/subcategorias: `/gestion-2002/categorias`.
-- Hero, logo, favicon, OG, ideas, beneficios y apariencia: `/gestion-2002/contenido`.
-- Seguridad: `/gestion-2002/configuracion/seguridad`.
+Incluye 19 modelos Prisma y 8 migraciones SQL. En una base de desarrollo nueva configurada por vos, aplicar `npx prisma migrate deploy`. El seed `npm run db:seed` modifica esa base: revisar su contenido y definir una contraseña propia antes de ejecutarlo.
 
-Despues de cambios admin se revalidan home, catalogo, producto y vistas internas relevantes.
+## Validación y límites
+
+La generación/validación de Prisma, lint, tipos y build pasaron con variables sintéticas. No se conectó una base real ni se probaron Google, login, WhatsApp, Blob o cobros. No hay suite de tests automatizados configurada.
+
+Más detalles en [VALIDACION-GITHUB.md](VALIDACION-GITHUB.md). Una compilación correcta no certifica una tienda operativa en producción.
+
+## Procedencia y alcance del respaldo
+
+Se conserva el historial original de 17 commits y se añade un commit de respaldo/documentación. El árbol original estaba limpio.
+
+Incluye fuentes, configuración versionable, lockfile, esquema y migraciones existentes, tests existentes y recursos locales seleccionados. No incluye `.env` privados, credenciales, bases de datos, pedidos/clientes reales, archivos de sesión, imágenes alojadas únicamente en servicios externos, capturas privadas, `node_modules`, `.next` ni otros derivados. Los datos de operación y medios externos necesitan un respaldo privado aparte. No se movió ni borró la fuente original.
+
+## Variantes relacionadas
+
+| Repositorio | Identidad |
+| --- | --- |
+| [zuki-zone-ecommerce](https://github.com/brusmakaka-lab/zuki-zone-ecommerce) | Tienda con Auth.js, contenido administrable y checkout WhatsApp |
+| [zuki-shop](https://github.com/brusmakaka-lab/zuki-shop) | Tienda con variantes, JWT y código de pagos |
+| [zuki-ropa-v46](https://github.com/brusmakaka-lab/zuki-ropa-v46) | Variante visual V4.6; integración Prisma 7 pendiente |
+| [zuki-commerce-os](https://github.com/brusmakaka-lab/zuki-commerce-os) | Gestión comercial por organización en desarrollo |
+
